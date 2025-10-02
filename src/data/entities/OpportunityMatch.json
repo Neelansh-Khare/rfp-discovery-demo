@@ -1,0 +1,76 @@
+{
+  "name": "OpportunityMatch",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Company entity ID"
+    },
+    "opportunity_id": {
+      "type": "string",
+      "description": "Opportunity entity ID"
+    },
+    "relevance_score": {
+      "type": "number",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "AI-generated relevance score (0-100)"
+    },
+    "match_rationale": {
+      "type": "string",
+      "description": "LLM explanation of why this opportunity matches"
+    },
+    "risk_notes": {
+      "type": "string",
+      "description": "Potential risks or concerns"
+    },
+    "actionability": {
+      "type": "string",
+      "enum": [
+        "high",
+        "medium",
+        "low"
+      ],
+      "description": "How actionable this opportunity is"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "prime_opportunity",
+          "subcontractor_suitable",
+          "incumbent_risk",
+          "quick_turnaround",
+          "high_value",
+          "strategic_fit"
+        ]
+      },
+      "description": "Categorization tags"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "reviewed",
+        "saved",
+        "pursuing",
+        "submitted",
+        "won",
+        "lost",
+        "dismissed"
+      ],
+      "default": "new",
+      "description": "Tracking status"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Internal team notes"
+    }
+  },
+  "required": [
+    "company_id",
+    "opportunity_id",
+    "relevance_score"
+  ]
+}

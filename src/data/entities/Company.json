@@ -1,0 +1,107 @@
+{
+  "name": "Company",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Company name"
+    },
+    "industry_sectors": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "construction",
+          "consulting",
+          "it_services",
+          "professional_services",
+          "engineering",
+          "maintenance",
+          "security",
+          "environmental",
+          "healthcare",
+          "education",
+          "transportation",
+          "utilities",
+          "food_services",
+          "equipment_supply",
+          "software_development"
+        ]
+      },
+      "description": "Primary industry sectors"
+    },
+    "target_regions": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "british_columbia",
+          "alberta",
+          "saskatchewan",
+          "manitoba",
+          "ontario",
+          "quebec",
+          "new_brunswick",
+          "nova_scotia",
+          "prince_edward_island",
+          "newfoundland_labrador",
+          "northwest_territories",
+          "nunavut",
+          "yukon",
+          "national"
+        ]
+      },
+      "description": "Target Canadian regions"
+    },
+    "capabilities": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Key business capabilities and services"
+    },
+    "keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Keywords to match opportunities"
+    },
+    "excluded_keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Keywords to avoid in opportunities"
+    },
+    "min_contract_value": {
+      "type": "number",
+      "description": "Minimum contract value (CAD)"
+    },
+    "max_contract_value": {
+      "type": "number",
+      "description": "Maximum contract value (CAD)"
+    },
+    "certifications": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Company certifications"
+    },
+    "team_size": {
+      "type": "string",
+      "enum": [
+        "1-10",
+        "11-50",
+        "51-200",
+        "201-500",
+        "500+"
+      ],
+      "description": "Company size"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

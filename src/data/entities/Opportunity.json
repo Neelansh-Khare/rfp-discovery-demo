@@ -1,0 +1,118 @@
+{
+  "name": "Opportunity",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "RFP/tender title"
+    },
+    "buyer_organization": {
+      "type": "string",
+      "description": "Issuing organization/municipality"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "construction",
+        "consulting",
+        "it_services",
+        "professional_services",
+        "engineering",
+        "maintenance",
+        "security",
+        "environmental",
+        "healthcare",
+        "education",
+        "transportation",
+        "utilities",
+        "food_services",
+        "equipment_supply",
+        "software_development",
+        "other"
+      ],
+      "description": "Opportunity category"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the opportunity"
+    },
+    "region": {
+      "type": "string",
+      "enum": [
+        "british_columbia",
+        "alberta",
+        "saskatchewan",
+        "manitoba",
+        "ontario",
+        "quebec",
+        "new_brunswick",
+        "nova_scotia",
+        "prince_edward_island",
+        "newfoundland_labrador",
+        "northwest_territories",
+        "nunavut",
+        "yukon",
+        "national"
+      ],
+      "description": "Canadian region"
+    },
+    "deadline": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Submission deadline"
+    },
+    "budget_min": {
+      "type": "number",
+      "description": "Minimum budget (CAD)"
+    },
+    "budget_max": {
+      "type": "number",
+      "description": "Maximum budget (CAD)"
+    },
+    "source_url": {
+      "type": "string",
+      "description": "Original posting URL"
+    },
+    "documents": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Related documents"
+    },
+    "rfp_number": {
+      "type": "string",
+      "description": "Official RFP/tender number"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "closing_soon",
+        "closed",
+        "awarded"
+      ],
+      "default": "active",
+      "description": "Opportunity status"
+    },
+    "compliance_notes": {
+      "type": "string",
+      "description": "Special requirements or compliance notes"
+    }
+  },
+  "required": [
+    "title",
+    "buyer_organization",
+    "category",
+    "region",
+    "deadline"
+  ]
+}
