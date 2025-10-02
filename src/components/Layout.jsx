@@ -31,7 +31,7 @@ export default function Layout({ children }) {
         <div className="border-b border-neura-secondary p-6">
           <div className="flex items-center gap-3">
             <img
-              src="/500x500-NC_Logo.png"
+              src={`${import.meta.env.BASE_URL}500x500-NC_Logo.png`}
               alt="RFP Discovery Logo"
               className="w-10 h-10 rounded-lg object-cover"
             />
