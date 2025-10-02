@@ -11,5 +11,5 @@ export default defineConfig({
     },
   },
   // For GitHub Pages deployment - update this to match your repo name
-  base: './',
+  base: '/rfp-discovery-demo/',
 })
