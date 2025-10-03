@@ -1,6 +1,9 @@
 # RFP Discovery Platform - Client Demo
 
-## FOR DEMO PURPOSES - PRODUCT/BACKEND INTEGRATION AVAILIBLE ONLY TO CLIENTS. www.neuracities.com
+## FOR DEMO PURPOSES - PRODUCT/BACKEND INTEGRATION AVAILIBLE ONLY TO CLIENTS. 
+## https://neelansh-khare.github.io/rfp-discovery-demo/
+
+main company website - www.neuracities.com
 
 A standalone demo of the RFP Discovery platform for MODUS Planning, featuring AI-powered opportunity matching and pipeline management.
 
