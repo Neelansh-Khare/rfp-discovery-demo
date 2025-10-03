@@ -1,5 +1,7 @@
 # RFP Discovery Platform - Client Demo
 
+# FOR DEMO PURPOSES - PRODUCT AVAILIBLE ONLY TO CLIENTS
+
 A standalone demo of the RFP Discovery platform for MODUS Planning, featuring AI-powered opportunity matching and pipeline management.
 
 ## Features
