@@ -45,15 +45,15 @@ export default function Dashboard() {
 
       // Get all opportunities
       const opportunities = await Opportunity.list('-created_date');
-      
+
       // Get matches for this company
-      const matches = userCompany ? 
-        await OpportunityMatch.filter({ company_id: userCompany.id }, '-relevance_score', 10) : 
+      const matches = userCompany ?
+        await OpportunityMatch.filter({ company_id: userCompany.id }, '-relevance_score', 10) :
         [];
 
       // Calculate stats
       const highMatches = matches.filter(m => m.relevance_score >= 70).length;
-      const inPipeline = matches.filter(m => ['saved', 'pursuing', 'submitted'].includes(m.status)).length;
+      const savedCount = matches.filter(m => ['saved', 'pursuing', 'submitted'].includes(m.status)).length;
       const closingSoon = opportunities.filter(o => {
         const deadline = new Date(o.deadline);
         const now = new Date();
@@ -64,7 +64,7 @@ export default function Dashboard() {
       setStats({
         totalOpportunities: opportunities.length,
         highMatches,
-        inPipeline,
+        inPipeline: savedCount,
         closingSoon
       });
 
@@ -83,6 +83,43 @@ export default function Dashboard() {
       console.error("Error loading dashboard data:", error);
     }
     setIsLoading(false);
+  };
+
+  const handleSaveOpportunity = async (opportunity, note = '') => {
+    if (!company) return;
+
+    try {
+      // Find the existing match
+      const existingMatch = topMatches.find(m => m.opportunity_id === opportunity.id);
+
+      if (existingMatch) {
+        // Update status to saved and add note
+        await OpportunityMatch.update(existingMatch.id, { status: "saved", notes: note });
+      } else {
+        // Create new match if it doesn't exist
+        await OpportunityMatch.create({
+          company_id: company.id,
+          opportunity_id: opportunity.id,
+          relevance_score: 50,
+          status: "saved",
+          notes: note
+        });
+      }
+
+      // Reload dashboard data
+      await loadDashboardData();
+    } catch (error) {
+      console.error("Error saving opportunity:", error);
+    }
+  };
+
+  const handleUnsaveOpportunity = async (matchId) => {
+    try {
+      // Reload dashboard data after unsave
+      await loadDashboardData();
+    } catch (error) {
+      console.error("Error unsaving opportunity:", error);
+    }
   };
 
   return (
@@ -105,7 +142,7 @@ export default function Dashboard() {
                 <CardTitle className="text-xl font-bold text-slate-900">
                   Top Matches for You
                 </CardTitle>
-                <p className="text-xs text-slate-500 mt-1">Last Run: 09/10/2025</p>
+                <p className="text-xs text-slate-500 mt-1">Updated On: 09/10/2025</p>
               </div>
               <Link to={createPageUrl("Opportunities")}>
                 <Button variant="outline" size="sm">
@@ -128,10 +165,12 @@ export default function Dashboard() {
               <div className="divide-y divide-slate-100">
                 {topMatches.map((match) => (
                   <div key={match.id} className="p-6 hover:bg-slate-50 transition-colors">
-                    <OpportunityCard 
-                      opportunity={match.opportunity} 
+                    <OpportunityCard
+                      opportunity={match.opportunity}
                       match={match}
                       compact={true}
+                      onSave={handleSaveOpportunity}
+                      onUnsave={handleUnsaveOpportunity}
                     />
                   </div>
                 ))}

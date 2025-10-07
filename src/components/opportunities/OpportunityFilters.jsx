@@ -51,7 +51,8 @@ export default function OpportunityFilters({ filters, onFiltersChange, onClose }
       maxBudget: "",
       minRelevance: 0,
       deadlineRange: "all",
-      status: "active"
+      status: "active",
+      sortBy: "relevance"
     });
   };
 
@@ -73,9 +74,31 @@ export default function OpportunityFilters({ filters, onFiltersChange, onClose }
       </div>
 
       <div className="flex-1 overflow-auto p-6 space-y-6">
+        {/* Sort By */}
+        <div className="space-y-3">
+          <Label className="text-sm font-medium">Sort By</Label>
+          <Select
+            value={filters.sortBy || "relevance"}
+            onValueChange={(value) => updateFilter('sortBy', value)}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="relevance">Best Match</SelectItem>
+              <SelectItem value="deadline">Deadline</SelectItem>
+              <SelectItem value="budget">Budget</SelectItem>
+              <SelectItem value="recent">Most Recent</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Relevance Score */}
         <div className="space-y-3">
-          <Label className="text-sm font-medium">Minimum Relevance Score</Label>
+          <div className="flex justify-between items-center">
+            <Label className="text-sm font-medium">Minimum Relevance Score</Label>
+            <span className="text-sm font-semibold text-neura-teal">{filters.minRelevance}%</span>
+          </div>
           <div className="px-3">
             <Slider
               value={[filters.minRelevance]}
@@ -84,49 +107,10 @@ export default function OpportunityFilters({ filters, onFiltersChange, onClose }
               step={5}
               className="w-full"
             />
-            <div className="flex justify-between text-xs text-slate-500 mt-1">
+            <div className="flex justify-between text-xs text-slate-400 mt-1">
               <span>0%</span>
-              <span className="font-medium">{filters.minRelevance}%</span>
               <span>100%</span>
             </div>
-          </div>
-        </div>
-
-        {/* Regions */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">Regions</Label>
-          <div className="space-y-2">
-            {regions.map((region) => (
-              <div key={region.value} className="flex items-center space-x-2">
-                <Checkbox
-                  id={region.value}
-                  checked={filters.regions?.includes(region.value)}
-                  onCheckedChange={() => toggleArrayFilter('regions', region.value)}
-                />
-                <Label htmlFor={region.value} className="text-sm text-slate-700">
-                  {region.label}
-                </Label>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        {/* Categories */}
-        <div className="space-y-3">
-          <Label className="text-sm font-medium">Categories</Label>
-          <div className="space-y-2">
-            {categories.map((category) => (
-              <div key={category.value} className="flex items-center space-x-2">
-                <Checkbox
-                  id={category.value}
-                  checked={filters.categories?.includes(category.value)}
-                  onCheckedChange={() => toggleArrayFilter('categories', category.value)}
-                />
-                <Label htmlFor={category.value} className="text-sm text-slate-700">
-                  {category.label}
-                </Label>
-              </div>
-            ))}
           </div>
         </div>
 

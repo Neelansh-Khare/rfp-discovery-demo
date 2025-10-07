@@ -5,13 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Search, Filter, SlidersHorizontal, Download } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -24,11 +17,10 @@ export default function Opportunities() {
   const [matches, setMatches] = useState([]);
   const [filteredOpportunities, setFilteredOpportunities] = useState([]);
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortBy, setSortBy] = useState("relevance");
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [company, setCompany] = useState(null);
-  
+
   const [filters, setFilters] = useState({
     regions: [],
     categories: [],
@@ -36,7 +28,8 @@ export default function Opportunities() {
     maxBudget: "",
     minRelevance: 0,
     deadlineRange: "all",
-    status: "active"
+    status: "active",
+    sortBy: "relevance"
   });
 
   useEffect(() => {
@@ -100,6 +93,7 @@ export default function Opportunities() {
     }
 
     // Sort
+    const sortBy = filters.sortBy || "relevance";
     filtered.sort((a, b) => {
       if (sortBy === "relevance" && company) {
         const matchA = matches.find(m => m.opportunity_id === a.id);
@@ -118,7 +112,7 @@ export default function Opportunities() {
     });
 
     setFilteredOpportunities(filtered);
-  }, [opportunities, matches, searchTerm, filters, sortBy, company]);
+  }, [opportunities, matches, searchTerm, filters, company]);
 
   useEffect(() => {
     applyFilters();
@@ -151,31 +145,51 @@ export default function Opportunities() {
     setIsLoading(false);
   };
 
-  const handleSaveOpportunity = async (opportunity) => {
+  const handleSaveOpportunity = async (opportunity, note = '') => {
     if (!company) return;
-    
-    // Check if match already exists
-    const existingMatch = matches.find(m => m.opportunity_id === opportunity.id);
-    
-    if (existingMatch) {
-      // Update status to saved
-      await OpportunityMatch.update(existingMatch.id, { status: "saved" });
-    } else {
-      // Create new match
-      await OpportunityMatch.create({
-        company_id: company.id,
-        opportunity_id: opportunity.id,
-        relevance_score: 50, // Default score
-        status: "saved"
-      });
+
+    try {
+      // Check if match already exists
+      const existingMatch = matches.find(m => m.opportunity_id === opportunity.id);
+
+      if (existingMatch) {
+        // Update status to saved and add note
+        await OpportunityMatch.update(existingMatch.id, { status: "saved", notes: note });
+      } else {
+        // Create new match
+        await OpportunityMatch.create({
+          company_id: company.id,
+          opportunity_id: opportunity.id,
+          relevance_score: 50, // Default score
+          status: "saved",
+          notes: note
+        });
+      }
+
+      // Reload matches
+      const updatedMatches = await OpportunityMatch.filter(
+        { company_id: company.id },
+        "-relevance_score"
+      );
+      setMatches(updatedMatches);
+    } catch (error) {
+      console.error("Error saving opportunity:", error);
     }
-    
-    // Reload matches
-    const updatedMatches = await OpportunityMatch.filter(
-      { company_id: company.id }, 
-      "-relevance_score"
-    );
-    setMatches(updatedMatches);
+  };
+
+  const handleUnsaveOpportunity = async (matchId) => {
+    if (!company) return;
+
+    try {
+      // Reload matches after unsave
+      const updatedMatches = await OpportunityMatch.filter(
+        { company_id: company.id },
+        "-relevance_score"
+      );
+      setMatches(updatedMatches);
+    } catch (error) {
+      console.error("Error unsaving opportunity:", error);
+    }
   };
 
   return (
@@ -219,7 +233,7 @@ export default function Opportunities() {
             </div>
           </div>
 
-          {/* Search and Sort Bar */}
+          {/* Search Bar */}
           <div className="flex gap-4 mt-6">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -230,18 +244,6 @@ export default function Opportunities() {
                 className="pl-10 bg-slate-50 border-slate-300 w-full"
               />
             </div>
-
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="flex-shrink-0">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="relevance">Best Match</SelectItem>
-                <SelectItem value="deadline">Deadline</SelectItem>
-                <SelectItem value="budget">Budget</SelectItem>
-                <SelectItem value="recent">Most Recent</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
         </div>
 
@@ -274,6 +276,7 @@ export default function Opportunities() {
                     opportunity={opportunity}
                     match={match}
                     onSave={handleSaveOpportunity}
+                    onUnsave={handleUnsaveOpportunity}
                   />
                 );
               })}

@@ -6,7 +6,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 const StatCard = ({ title, value, icon: Icon, color, change }) => (
   <Card className="shadow-sm border-slate-200 hover:shadow-md transition-shadow">
     <CardContent className="p-6">
-      <div className="flex items-center justify-between">
+      <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-medium text-slate-500 mb-1">{title}</p>
           <p className="text-3xl font-bold text-slate-900">{value}</p>
@@ -17,7 +17,7 @@ const StatCard = ({ title, value, icon: Icon, color, change }) => (
             </p>
           )}
         </div>
-        <div className={`p-3 rounded-full ${color}`}>
+        <div className={`p-3 rounded-full ${color} flex-shrink-0`}>
           <Icon className="w-6 h-6 text-white" />
         </div>
       </div>
@@ -54,10 +54,10 @@ export default function DashboardStats({ stats, isLoading }) {
         title="Top Matches"
         value={stats.highMatches}
         icon={TrendingUp}
-        color="bg-neura-teal"
+        color="bg-neura-blueGray"
       />
       <StatCard
-        title="In Your Pipeline"
+        title="Saved Opportunities"
         value={stats.inPipeline}
         icon={Bookmark}
         color="bg-neura-slate"

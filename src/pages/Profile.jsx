@@ -32,18 +32,7 @@ const industries = [
 const regions = [
   { value: "british_columbia", label: "British Columbia" },
   { value: "alberta", label: "Alberta" },
-  { value: "saskatchewan", label: "Saskatchewan" },
-  { value: "manitoba", label: "Manitoba" },
-  { value: "ontario", label: "Ontario" },
-  { value: "quebec", label: "Quebec" },
-  { value: "new_brunswick", label: "New Brunswick" },
-  { value: "nova_scotia", label: "Nova Scotia" },
-  { value: "prince_edward_island", label: "Prince Edward Island" },
-  { value: "newfoundland_labrador", label: "Newfoundland & Labrador" },
-  { value: "northwest_territories", label: "Northwest Territories" },
-  { value: "nunavut", label: "Nunavut" },
-  { value: "yukon", label: "Yukon" },
-  { value: "national", label: "National" }
+  { value: "yukon", label: "Yukon" }
 ];
 
 export default function Profile() {
@@ -58,6 +47,7 @@ export default function Profile() {
 
   const [formData, setFormData] = useState({
     name: "",
+    description: "",
     industry_sectors: [],
     target_regions: [],
     capabilities: [],
@@ -82,6 +72,7 @@ export default function Profile() {
         setCompany(comp);
         setFormData({
           name: comp.name || "",
+          description: comp.description || "",
           industry_sectors: comp.industry_sectors || [],
           target_regions: comp.target_regions || [],
           capabilities: comp.capabilities || [],
@@ -212,22 +203,14 @@ export default function Profile() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Team Size</Label>
-                  <Select
-                    value={formData.team_size}
-                    onValueChange={(value) => handleInputChange('team_size', value)}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select team size" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="1-10">1-10 employees</SelectItem>
-                      <SelectItem value="11-50">11-50 employees</SelectItem>
-                      <SelectItem value="51-200">51-200 employees</SelectItem>
-                      <SelectItem value="201-500">201-500 employees</SelectItem>
-                      <SelectItem value="500+">500+ employees</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label htmlFor="description">Company Description</Label>
+                  <Textarea
+                    id="description"
+                    value={formData.description}
+                    onChange={(e) => handleInputChange('description', e.target.value)}
+                    placeholder="Describe your company, services, and expertise..."
+                    className="min-h-24"
+                  />
                 </div>
 
                 <div className="grid grid-cols-2 gap-4">

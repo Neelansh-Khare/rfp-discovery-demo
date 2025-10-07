@@ -92,13 +92,22 @@ export default function Pipeline() {
   const updateMatchNotes = async (matchId, notes) => {
     try {
       await OpportunityMatch.update(matchId, { notes });
-      setMatches(prev => prev.map(match => 
+      setMatches(prev => prev.map(match =>
         match.id === matchId ? { ...match, notes } : match
       ));
       setEditingMatch(null);
       setNewNotes("");
     } catch (error) {
       console.error("Error updating match notes:", error);
+    }
+  };
+
+  const handleUnsaveOpportunity = async (matchId) => {
+    try {
+      // Reload pipeline data after unsave
+      await loadPipelineData();
+    } catch (error) {
+      console.error("Error unsaving opportunity:", error);
     }
   };
 
@@ -162,12 +171,12 @@ export default function Pipeline() {
         {/* Header */}
         <div className="flex justify-between items-center">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">My Pipeline</h1>
-            <p className="text-slate-600 mt-1">Track your RFP opportunities from discovery to completion</p>
+            <h1 className="text-3xl font-bold text-slate-900">Saved</h1>
+            <p className="text-slate-600 mt-1">Track your saved RFP opportunities from discovery to completion</p>
           </div>
         </div>
 
-        {/* Pipeline Tabs */}
+        {/* Saved Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
           <TabsList className="grid grid-cols-6 w-full max-w-2xl bg-slate-100">
             <TabsTrigger value="all" className="data-[state=active]:bg-white">
@@ -210,6 +219,7 @@ export default function Pipeline() {
                                   opportunity={opportunity}
                                   match={match}
                                   compact={true}
+                                  onUnsave={handleUnsaveOpportunity}
                                 />
                               </div>
                               <div className="ml-6">
@@ -297,11 +307,11 @@ export default function Pipeline() {
                       {getStatusIcon(status)}
                     </div>
                     <h3 className="text-xl font-semibold text-slate-900 mb-2">
-                      No {status === 'all' ? 'pipeline' : status} opportunities
+                      No {status === 'all' ? 'saved' : status} opportunities
                     </h3>
                     <p className="text-slate-600">
-                      {status === 'all' 
-                        ? 'Save opportunities from the browser to start building your pipeline'
+                      {status === 'all'
+                        ? 'Save opportunities from the Opportunities page to start tracking them'
                         : `No opportunities in ${status} status yet`
                       }
                     </p>
