@@ -1,4 +1,5 @@
 import { mockCompanies, mockOpportunities, mockOpportunityMatches } from '@/lib/mockData';
+import { normalizeOpportunityCategory, normalizeCompanyCategories } from '@/utils/categoryMapper';
 
 // Simple delay function to simulate API call
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -8,7 +9,7 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 export class Company {
   static async list() {
     await delay(300); // Simulate network delay
-    return [...mockCompanies];
+    return mockCompanies.map(normalizeCompanyCategories);
   }
 
   static async filter(criteria) {
@@ -51,24 +52,27 @@ export class Company {
 export class Opportunity {
   static async list() {
     await delay(300);
-    return [...mockOpportunities];
+    return mockOpportunities.map(normalizeOpportunityCategory);
   }
 
   static async filter(criteria) {
     await delay(300);
-    return mockOpportunities.filter(opp => {
-      return Object.keys(criteria).every(key => {
-        if (key === 'status') {
-          return opp.status === criteria[key];
-        }
-        return opp[key] === criteria[key];
+    return mockOpportunities
+      .map(normalizeOpportunityCategory)
+      .filter(opp => {
+        return Object.keys(criteria).every(key => {
+          if (key === 'status') {
+            return opp.status === criteria[key];
+          }
+          return opp[key] === criteria[key];
+        });
       });
-    });
   }
 
   static async get(id) {
     await delay(300);
-    return mockOpportunities.find(o => o.id === id);
+    const opp = mockOpportunities.find(o => o.id === id);
+    return opp ? normalizeOpportunityCategory(opp) : null;
   }
 
   static async update(id, data) {

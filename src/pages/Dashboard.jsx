@@ -48,14 +48,31 @@ export default function Dashboard() {
 
       // Get matches for this company
       const matches = userCompany ?
-        await OpportunityMatch.filter({ company_id: userCompany.id }, '-relevance_score', 10) :
+        await OpportunityMatch.filter({ company_id: userCompany.id }, '-relevance_score') :
         [];
 
+      // Get top 20 matches with relevance score > 75%
+      const topMatches = matches
+        .filter(m => m.relevance_score > 75)
+        .sort((a, b) => b.relevance_score - a.relevance_score)
+        .slice(0, 20);
+
+      const topMatchesWithDetails = [];
+      for (const match of topMatches) {
+        const opportunity = opportunities.find(o => o.id === match.opportunity_id);
+        if (opportunity) {
+          topMatchesWithDetails.push({ ...match, opportunity });
+        }
+      }
+      setTopMatches(topMatchesWithDetails);
+
       // Calculate stats
-      const highMatches = matches.filter(m => m.relevance_score >= 70).length;
+      const highMatches = matches.filter(m => m.relevance_score > 75).length;
       const savedCount = matches.filter(m => ['saved', 'pursuing', 'submitted'].includes(m.status)).length;
-      const closingSoon = opportunities.filter(o => {
-        const deadline = new Date(o.deadline);
+
+      // Calculate closing soon from Top 20 matches only
+      const closingSoon = topMatchesWithDetails.filter(match => {
+        const deadline = new Date(match.opportunity.deadline);
         const now = new Date();
         const daysDiff = (deadline - now) / (1000 * 60 * 60 * 24);
         return daysDiff <= 7 && daysDiff > 0;
@@ -67,17 +84,6 @@ export default function Dashboard() {
         inPipeline: savedCount,
         closingSoon
       });
-
-      // Get top 3 matches by highest relevance score
-      const sortedMatches = [...matches].sort((a, b) => b.relevance_score - a.relevance_score);
-      const topMatchesWithDetails = [];
-      for (const match of sortedMatches.slice(0, 3)) {
-        const opportunity = opportunities.find(o => o.id === match.opportunity_id);
-        if (opportunity) {
-          topMatchesWithDetails.push({ ...match, opportunity });
-        }
-      }
-      setTopMatches(topMatchesWithDetails);
 
     } catch (error) {
       console.error("Error loading dashboard data:", error);
@@ -122,6 +128,11 @@ export default function Dashboard() {
     }
   };
 
+  const handleDislikeOpportunity = (opportunityId) => {
+    // Remove the disliked opportunity from top matches
+    setTopMatches(prev => prev.filter(match => match.opportunity.id !== opportunityId));
+  };
+
   return (
     <div className="p-6 bg-slate-50 min-h-screen">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -134,15 +145,17 @@ export default function Dashboard() {
         {/* Stats Cards */}
         <DashboardStats stats={stats} isLoading={isLoading} />
 
-        {/* Top Matches */}
+        {/* Top Matches - Scrollable Table */}
         <Card className="shadow-sm border-slate-200">
           <CardHeader className="border-b border-slate-100">
             <div className="flex justify-between items-center">
               <div>
                 <CardTitle className="text-xl font-bold text-slate-900">
-                  Top Matches for You
+                  Top Matches
                 </CardTitle>
-                <p className="text-xs text-slate-500 mt-1">Updated On: 09/10/2025</p>
+                <p className="text-xs text-slate-500 mt-1">
+                  Updated On: 09/10/2025
+                </p>
               </div>
               <Link to={createPageUrl("Opportunities")}>
                 <Button variant="outline" size="sm">
@@ -162,7 +175,7 @@ export default function Dashboard() {
                 ))}
               </div>
             ) : topMatches.length > 0 ? (
-              <div className="divide-y divide-slate-100">
+              <div className="divide-y divide-slate-100 max-h-[600px] overflow-y-auto">
                 {topMatches.map((match) => (
                   <div key={match.id} className="p-6 hover:bg-slate-50 transition-colors">
                     <OpportunityCard
@@ -171,6 +184,7 @@ export default function Dashboard() {
                       compact={true}
                       onSave={handleSaveOpportunity}
                       onUnsave={handleUnsaveOpportunity}
+                      onDislike={handleDislikeOpportunity}
                     />
                   </div>
                 ))}

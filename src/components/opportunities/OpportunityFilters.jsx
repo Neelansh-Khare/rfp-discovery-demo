@@ -7,6 +7,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Slider } from "@/components/ui/slider";
 import { X, RotateCcw } from "lucide-react";
+import { STANDARD_CATEGORIES } from "@/constants/categories";
 
 const regions = [
   { value: "british_columbia", label: "British Columbia" },
@@ -18,16 +19,6 @@ const regions = [
   { value: "new_brunswick", label: "New Brunswick" },
   { value: "nova_scotia", label: "Nova Scotia" },
   { value: "national", label: "National" }
-];
-
-const categories = [
-  { value: "construction", label: "Construction" },
-  { value: "consulting", label: "Consulting" },
-  { value: "it_services", label: "IT Services" },
-  { value: "professional_services", label: "Professional Services" },
-  { value: "engineering", label: "Engineering" },
-  { value: "maintenance", label: "Maintenance" },
-  { value: "environmental", label: "Environmental" }
 ];
 
 export default function OpportunityFilters({ filters, onFiltersChange, onClose }) {
@@ -160,6 +151,54 @@ export default function OpportunityFilters({ filters, onFiltersChange, onClose }
               <SelectItem value="90days">Next 90 days</SelectItem>
             </SelectContent>
           </Select>
+        </div>
+
+        {/* Regions - Checkboxes */}
+        <div className="space-y-3">
+          <Label className="text-sm font-medium">Regions</Label>
+          <div className="space-y-2">
+            {[
+              { value: "alberta", label: "Alberta" },
+              { value: "british_columbia", label: "British Columbia" },
+              { value: "yukon", label: "Yukon" }
+            ].map(region => (
+              <div key={region.value} className="flex items-center gap-2">
+                <Checkbox
+                  id={`region-${region.value}`}
+                  checked={filters.regions?.includes(region.value)}
+                  onCheckedChange={() => toggleArrayFilter('regions', region.value)}
+                />
+                <Label
+                  htmlFor={`region-${region.value}`}
+                  className="text-sm cursor-pointer font-normal"
+                >
+                  {region.label}
+                </Label>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Industries - Checkboxes */}
+        <div className="space-y-3">
+          <Label className="text-sm font-medium">Industries</Label>
+          <div className="space-y-2 max-h-64 overflow-y-auto">
+            {STANDARD_CATEGORIES.map(category => (
+              <div key={category.value} className="flex items-center gap-2">
+                <Checkbox
+                  id={`category-${category.value}`}
+                  checked={filters.categories?.includes(category.value)}
+                  onCheckedChange={() => toggleArrayFilter('categories', category.value)}
+                />
+                <Label
+                  htmlFor={`category-${category.value}`}
+                  className="text-sm cursor-pointer font-normal"
+                >
+                  {category.label}
+                </Label>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     </div>

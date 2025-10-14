@@ -63,7 +63,7 @@ export default function DashboardStats({ stats, isLoading }) {
         color="bg-neura-slate"
       />
       <StatCard
-        title="Closing Soon"
+        title="Top Matches Closing Soon"
         value={stats.closingSoon}
         icon={Clock}
         color="bg-neura-coral"

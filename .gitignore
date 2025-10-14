@@ -24,3 +24,5 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+summary.md
+IMPLEMENTATION_SUMMARY.md

@@ -8,32 +8,57 @@ import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, Save, Plus, X } from "lucide-react";
+import { Building2, Save, Plus, X, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { STANDARD_CATEGORIES } from "@/constants/categories";
 
-const industries = [
-  { value: "construction", label: "Construction" },
-  { value: "consulting", label: "Consulting" },
-  { value: "it_services", label: "IT Services" },
-  { value: "professional_services", label: "Professional Services" },
-  { value: "engineering", label: "Engineering" },
-  { value: "maintenance", label: "Maintenance" },
-  { value: "security", label: "Security" },
-  { value: "environmental", label: "Environmental" },
-  { value: "healthcare", label: "Healthcare" },
-  { value: "education", label: "Education" },
-  { value: "transportation", label: "Transportation" },
-  { value: "utilities", label: "Utilities" },
-  { value: "food_services", label: "Food Services" },
-  { value: "equipment_supply", label: "Equipment Supply" },
-  { value: "software_development", label: "Software Development" }
-];
+// Profile edit rate limiting constants
+const PROFILE_EDIT_STORAGE_KEY = 'profile_edit_history';
+const MAX_EDITS_PER_WEEK = 3; // Changed from per day to per week
 
 const regions = [
   { value: "british_columbia", label: "British Columbia" },
   { value: "alberta", label: "Alberta" },
   { value: "yukon", label: "Yukon" }
 ];
+
+// Helper functions for rate limiting (per week)
+const getEditHistory = () => {
+  try {
+    const history = JSON.parse(localStorage.getItem(PROFILE_EDIT_STORAGE_KEY) || '[]');
+    const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
+    return history.filter(timestamp => timestamp > oneWeekAgo);
+  } catch {
+    return [];
+  }
+};
+
+const canEdit = () => {
+  return getEditHistory().length < MAX_EDITS_PER_WEEK;
+};
+
+const recordEdit = () => {
+  const history = getEditHistory();
+  history.push(Date.now());
+  localStorage.setItem(PROFILE_EDIT_STORAGE_KEY, JSON.stringify(history));
+};
+
+const getTimeUntilNextEdit = () => {
+  const history = getEditHistory();
+  if (history.length === 0) return null;
+  const oldestEdit = Math.min(...history);
+  const timeUntilReset = (oldestEdit + 7 * 24 * 60 * 60 * 1000) - Date.now();
+  const days = Math.ceil(timeUntilReset / (1000 * 60 * 60 * 24));
+  return days;
+};
+
+// Get button color based on edits remaining
+const getButtonColor = (editsRemaining) => {
+  if (editsRemaining === 0) return "bg-slate-400 hover:bg-slate-400 cursor-not-allowed opacity-60";
+  if (editsRemaining === 1) return "bg-red-500 hover:bg-red-600";
+  if (editsRemaining === 2) return "bg-yellow-500 hover:bg-yellow-600";
+  return "bg-green-500 hover:bg-green-600"; // 3 edits remaining
+};
 
 export default function Profile() {
   const [company, setCompany] = useState(null);
@@ -43,7 +68,16 @@ export default function Profile() {
   const [newExcludedKeyword, setNewExcludedKeyword] = useState("");
   const [newCapability, setNewCapability] = useState("");
   const [newCertification, setNewCertification] = useState("");
+  const [editCount, setEditCount] = useState(getEditHistory().length);
+  const [expandedSections, setExpandedSections] = useState({
+    capabilities: true,
+    certifications: true
+  });
   const { toast } = useToast();
+
+  const toggleSection = (section) => {
+    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
+  };
 
   const [formData, setFormData] = useState({
     name: "",
@@ -121,6 +155,17 @@ export default function Profile() {
   };
 
   const handleSave = async () => {
+    // Check if user can edit
+    if (!canEdit()) {
+      const daysUntilReset = getTimeUntilNextEdit();
+      toast({
+        title: "Edit limit reached",
+        description: `You've reached the maximum of 3 profile edits per week. You can edit again in ${daysUntilReset} day${daysUntilReset > 1 ? 's' : ''}.`,
+        variant: "destructive"
+      });
+      return;
+    }
+
     setIsSaving(true);
     try {
       const dataToSave = {
@@ -136,9 +181,15 @@ export default function Profile() {
         setCompany(newCompany);
       }
 
+      // Record this edit
+      recordEdit();
+      setEditCount(getEditHistory().length);
+
+      const editsRemaining = MAX_EDITS_PER_WEEK - getEditHistory().length;
+
       toast({
         title: "Profile saved successfully",
-        description: "Your company profile has been updated."
+        description: `Your company profile has been updated. ${editsRemaining} edit${editsRemaining !== 1 ? 's' : ''} remaining this week.`
       });
 
     } catch (error) {
@@ -166,6 +217,9 @@ export default function Profile() {
     );
   }
 
+  const editsRemaining = MAX_EDITS_PER_WEEK - editCount;
+  const isLimitReached = !canEdit();
+
   return (
     <div className="p-6 bg-slate-50 min-h-screen">
       <div className="max-w-4xl mx-auto space-y-8">
@@ -175,11 +229,40 @@ export default function Profile() {
             <h1 className="text-3xl font-bold text-slate-900">Company Profile</h1>
             <p className="text-slate-600 mt-1">Configure your preferences for better RFP matching</p>
           </div>
-          <Button onClick={handleSave} disabled={isSaving} className="bg-neura-coral hover:bg-neura-coralLight text-white">
-            <Save className="w-4 h-4 mr-2" />
-            {isSaving ? "Saving..." : "Save Profile"}
-          </Button>
+          <div className="flex flex-col items-end gap-1">
+            <Button
+              onClick={handleSave}
+              disabled={isSaving || isLimitReached}
+              className={`${getButtonColor(editsRemaining)} text-white`}
+            >
+              <Save className="w-4 h-4 mr-2" />
+              {isSaving ? "Saving..." : isLimitReached ? "Edit Limit Reached" : "Save Profile"}
+            </Button>
+            <p className="text-xs text-slate-600">
+              You have {editsRemaining} profile change{editsRemaining !== 1 ? 's' : ''} left this week
+            </p>
+          </div>
         </div>
+
+        {/* Edit Limit Warning */}
+        {editCount >= 2 && (
+          <Card className={`border-2 ${isLimitReached ? 'border-red-300 bg-red-50' : 'border-yellow-300 bg-yellow-50'}`}>
+            <CardContent className="p-4 flex items-start gap-3">
+              <AlertCircle className={`w-5 h-5 mt-0.5 flex-shrink-0 ${isLimitReached ? 'text-red-600' : 'text-yellow-600'}`} />
+              <div>
+                <p className={`font-semibold ${isLimitReached ? 'text-red-900' : 'text-yellow-900'}`}>
+                  {isLimitReached ? 'Profile Edit Limit Reached' : 'Profile Edit Limit Warning'}
+                </p>
+                <p className={`text-sm ${isLimitReached ? 'text-red-700' : 'text-yellow-700'}`}>
+                  {isLimitReached
+                    ? `You've used all 3 profile edits. You can edit again in ${getTimeUntilNextEdit()} day${getTimeUntilNextEdit() > 1 ? 's' : ''}.`
+                    : `You have ${editsRemaining} profile edit${editsRemaining !== 1 ? 's' : ''} remaining this week.`
+                  }
+                </p>
+              </div>
+            </CardContent>
+          </Card>
+        )}
 
         <div className="grid lg:grid-cols-3 gap-8">
           {/* Basic Information */}
@@ -244,8 +327,8 @@ export default function Profile() {
                 <CardTitle>Industry Sectors</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-2 gap-3">
-                  {industries.map((industry) => (
+                <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto">
+                  {STANDARD_CATEGORIES.map((industry) => (
                     <div key={industry.value} className="flex items-center space-x-2">
                       <Checkbox
                         id={industry.value}
@@ -367,84 +450,100 @@ export default function Profile() {
               </CardContent>
             </Card>
 
-            {/* Capabilities */}
+            {/* Capabilities - Collapsible */}
             <Card className="shadow-sm border-slate-200">
-              <CardHeader>
-                <CardTitle>Key Capabilities</CardTitle>
+              <CardHeader
+                className="cursor-pointer hover:bg-slate-50 transition-colors"
+                onClick={() => toggleSection('capabilities')}
+              >
+                <div className="flex justify-between items-center">
+                  <CardTitle>Key Capabilities ({formData.capabilities.length})</CardTitle>
+                  {expandedSections.capabilities ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </div>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-2">
-                  <Input
-                    value={newCapability}
-                    onChange={(e) => setNewCapability(e.target.value)}
-                    placeholder="Add capability"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        addToArrayField('capabilities', newCapability, setNewCapability);
-                      }
-                    }}
-                  />
-                  <Button
-                    size="sm"
-                    onClick={() => addToArrayField('capabilities', newCapability, setNewCapability)}
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {formData.capabilities.map((capability, index) => (
-                    <Badge key={index} variant="outline" className="flex items-center gap-1">
-                      {capability}
-                      <button
-                        onClick={() => removeFromArrayField('capabilities', index)}
-                        className="ml-1 hover:text-red-600"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
+              {expandedSections.capabilities && (
+                <CardContent className="space-y-4">
+                  <div className="flex gap-2">
+                    <Input
+                      value={newCapability}
+                      onChange={(e) => setNewCapability(e.target.value)}
+                      placeholder="Add capability"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          addToArrayField('capabilities', newCapability, setNewCapability);
+                        }
+                      }}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => addToArrayField('capabilities', newCapability, setNewCapability)}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
+                    {formData.capabilities.map((capability, index) => (
+                      <Badge key={index} variant="outline" className="flex items-center gap-1">
+                        {capability}
+                        <button
+                          onClick={() => removeFromArrayField('capabilities', index)}
+                          className="ml-1 hover:text-red-600"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              )}
             </Card>
 
-            {/* Certifications */}
+            {/* Certifications - Collapsible */}
             <Card className="shadow-sm border-slate-200">
-              <CardHeader>
-                <CardTitle>Certifications</CardTitle>
+              <CardHeader
+                className="cursor-pointer hover:bg-slate-50 transition-colors"
+                onClick={() => toggleSection('certifications')}
+              >
+                <div className="flex justify-between items-center">
+                  <CardTitle>Certifications ({formData.certifications.length})</CardTitle>
+                  {expandedSections.certifications ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
+                </div>
               </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-2">
-                  <Input
-                    value={newCertification}
-                    onChange={(e) => setNewCertification(e.target.value)}
-                    placeholder="Add certification"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        addToArrayField('certifications', newCertification, setNewCertification);
-                      }
-                    }}
-                  />
-                  <Button
-                    size="sm"
-                    onClick={() => addToArrayField('certifications', newCertification, setNewCertification)}
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {formData.certifications.map((cert, index) => (
-                    <Badge key={index} variant="outline" className="flex items-center gap-1 bg-green-50 text-green-700 border-green-200">
-                      {cert}
-                      <button
-                        onClick={() => removeFromArrayField('certifications', index)}
-                        className="ml-1 hover:text-red-600"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
+              {expandedSections.certifications && (
+                <CardContent className="space-y-4">
+                  <div className="flex gap-2">
+                    <Input
+                      value={newCertification}
+                      onChange={(e) => setNewCertification(e.target.value)}
+                      placeholder="Add certification"
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          addToArrayField('certifications', newCertification, setNewCertification);
+                        }
+                      }}
+                    />
+                    <Button
+                      size="sm"
+                      onClick={() => addToArrayField('certifications', newCertification, setNewCertification)}
+                    >
+                      <Plus className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
+                    {formData.certifications.map((cert, index) => (
+                      <Badge key={index} variant="outline" className="flex items-center gap-1 bg-green-50 text-green-700 border-green-200">
+                        {cert}
+                        <button
+                          onClick={() => removeFromArrayField('certifications', index)}
+                          className="ml-1 hover:text-red-600"
+                        >
+                          <X className="w-3 h-3" />
+                        </button>
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              )}
             </Card>
           </div>
         </div>

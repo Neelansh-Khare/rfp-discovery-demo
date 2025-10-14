@@ -4,6 +4,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import DislikeFeedbackDialog from "./DislikeFeedbackDialog";
+import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip";
+import { getCategoryColor, getCategoryLabel } from "@/constants/categories";
 import {
   MapPin,
   DollarSign,
@@ -14,21 +17,10 @@ import {
   Bookmark,
   Clock,
   ChevronDown,
-  ChevronUp
+  ChevronUp,
+  ThumbsUp,
+  ThumbsDown
 } from "lucide-react";
-import { format } from "date-fns";
-
-const categoryColors = {
-  construction: "bg-orange-100 text-orange-800 border-orange-200",
-  consulting: "bg-blue-100 text-blue-800 border-blue-200",
-  it_services: "bg-purple-100 text-purple-800 border-purple-200",
-  professional_services: "bg-green-100 text-green-800 border-green-200",
-  engineering: "bg-indigo-100 text-indigo-800 border-indigo-200",
-  maintenance: "bg-yellow-100 text-yellow-800 border-yellow-200",
-  security: "bg-red-100 text-red-800 border-red-200",
-  environmental: "bg-emerald-100 text-emerald-800 border-emerald-200",
-  other: "bg-gray-100 text-gray-800 border-gray-200"
-};
 
 const regionNames = {
   british_columbia: "British Columbia",
@@ -47,13 +39,36 @@ const regionNames = {
   national: "National"
 };
 
-export default function OpportunityCard({ opportunity, match, compact = false, onSave, onUnsave }) {
+// Generate mock tooltip explanation
+const generateTooltipExplanation = (opportunity, score) => {
+  const categoryMatch = `Strong alignment with ${opportunity.category?.replace(/_/g, ' ')} sector`;
+  const regionMatch = `Located in your target region: ${regionNames[opportunity.region] || opportunity.region}`;
+  const budgetMatch = "Budget range matches your capacity";
+  const keywordsMatch = "Keywords match your capabilities profile";
+  const pastExperience = "Similar past project experience detected";
+
+  const explanations = [categoryMatch, regionMatch, budgetMatch, keywordsMatch, pastExperience];
+
+  // Return 1-2 reasons based on score
+  if (score > 85) {
+    return explanations.slice(0, 2).join('. ') + '.';
+  } else if (score > 75) {
+    return explanations[0] + '.';
+  }
+  return "Moderate match based on profile analysis.";
+};
+
+export default function OpportunityCard({ opportunity, match, compact = false, onSave, onUnsave, onDislike }) {
   const [isSaved, setIsSaved] = React.useState(
     match?.status && ['saved', 'pursuing', 'submitted', 'won', 'lost'].includes(match.status)
   );
   const [showNoteDialog, setShowNoteDialog] = React.useState(false);
+  const [showDislikeDialog, setShowDislikeDialog] = React.useState(false);
   const [noteText, setNoteText] = React.useState('');
   const [isExpanded, setIsExpanded] = React.useState(false);
+  const [shouldShowReadMore, setShouldShowReadMore] = React.useState(false);
+  const [isLiked, setIsLiked] = React.useState(false);
+  const descriptionRef = React.useRef(null);
   const daysTillDeadline = Math.ceil((new Date(opportunity.deadline) - new Date()) / (1000 * 60 * 60 * 24));
   const isUrgent = daysTillDeadline <= 7;
 
@@ -63,6 +78,16 @@ export default function OpportunityCard({ opportunity, match, compact = false, o
       match?.status && ['saved', 'pursuing', 'submitted', 'won', 'lost'].includes(match.status)
     );
   }, [match?.status]);
+
+  // Check if description exceeds 3 lines
+  React.useEffect(() => {
+    if (!compact && descriptionRef.current && opportunity.description) {
+      const element = descriptionRef.current;
+      const lineHeight = parseInt(window.getComputedStyle(element).lineHeight);
+      const maxHeight = lineHeight * 3; // 3 lines
+      setShouldShowReadMore(element.scrollHeight > maxHeight);
+    }
+  }, [opportunity.description, compact]);
 
   const getRelevanceColor = (score) => {
     if (score >= 80) return "bg-emerald-100 text-emerald-800 border-emerald-200";
@@ -112,6 +137,23 @@ export default function OpportunityCard({ opportunity, match, compact = false, o
     }
   };
 
+  const handleLike = () => {
+    setIsLiked(true);
+    // Simulate AI learning (just UX feedback, not stored)
+    console.log('Liked opportunity:', opportunity.title);
+  };
+
+  const handleDislike = () => {
+    setShowDislikeDialog(true);
+  };
+
+  const handleDislikeFeedbackSubmit = () => {
+    // After feedback is submitted, remove the card from view
+    if (onDislike) {
+      onDislike(opportunity.id);
+    }
+  };
+
   return (
     <>
       <Card className={`hover:shadow-md transition-all duration-200 border-slate-200 ${compact ? '' : 'mb-4'}`}>
@@ -141,10 +183,24 @@ export default function OpportunityCard({ opportunity, match, compact = false, o
 
               {match && (
                 <div className="flex items-center gap-2">
-                  <Badge className={`${getRelevanceColor(match.relevance_score)} border font-semibold hover:bg-transparent`}>
-                    <TrendingUp className="w-3 h-3 mr-1" />
-                    {match.relevance_score}% Match
-                  </Badge>
+                  {match.relevance_score > 75 ? (
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Badge className={`${getRelevanceColor(match.relevance_score)} border font-semibold hover:bg-transparent cursor-help`}>
+                          <TrendingUp className="w-3 h-3 mr-1" />
+                          {match.relevance_score}% Relevance Score
+                        </Badge>
+                      </TooltipTrigger>
+                      <TooltipContent className="max-w-xs whitespace-normal">
+                        {generateTooltipExplanation(opportunity, match.relevance_score)}
+                      </TooltipContent>
+                    </Tooltip>
+                  ) : (
+                    <Badge className={`${getRelevanceColor(match.relevance_score)} border font-semibold hover:bg-transparent`}>
+                      <TrendingUp className="w-3 h-3 mr-1" />
+                      {match.relevance_score}% Relevance Score
+                    </Badge>
+                  )}
                   <Button
                     variant={isSaved ? "default" : "outline"}
                     size="sm"
@@ -166,10 +222,13 @@ export default function OpportunityCard({ opportunity, match, compact = false, o
           {/* Description */}
           {!compact && opportunity.description && (
             <div className="text-slate-600 text-sm">
-              <p className={isExpanded ? "" : "line-clamp-2"}>
+              <p
+                ref={descriptionRef}
+                className={isExpanded ? "" : "line-clamp-3"}
+              >
                 {opportunity.description}
               </p>
-              {opportunity.description.length > 150 && (
+              {shouldShowReadMore && (
                 <Button
                   variant="ghost"
                   size="sm"
@@ -192,30 +251,56 @@ export default function OpportunityCard({ opportunity, match, compact = false, o
             </div>
           )}
 
-          {/* Details Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-            <div className="flex items-center gap-2 text-slate-600">
-              <MapPin className="w-4 h-4" />
-              <span>{regionNames[opportunity.region]}</span>
+          {/* Details Grid with Like/Dislike buttons */}
+          <div className="flex justify-between items-end gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm flex-1">
+              <div className="flex items-center gap-2 text-slate-600">
+                <MapPin className="w-4 h-4" />
+                <span>{regionNames[opportunity.region]}</span>
+              </div>
+
+              <div className="flex items-center gap-2 text-slate-600">
+                <DollarSign className="w-4 h-4" />
+                <span className="text-xs">{formatBudget(opportunity.budget_min, opportunity.budget_max)}</span>
+              </div>
+
+              <div className={`flex items-center gap-2 ${isUrgent ? 'text-red-600' : 'text-slate-600'}`}>
+                {isUrgent ? <Clock className="w-4 h-4" /> : <Calendar className="w-4 h-4" />}
+                <span className="font-medium">
+                  {daysTillDeadline > 0 ? `${daysTillDeadline} days left` : 'Deadline passed'}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <Badge className={`${getCategoryColor(opportunity.category)} border text-xs`}>
+                  {getCategoryLabel(opportunity.category)}
+                </Badge>
+              </div>
             </div>
-            
-            <div className="flex items-center gap-2 text-slate-600">
-              <DollarSign className="w-4 h-4" />
-              <span className="text-xs">{formatBudget(opportunity.budget_min, opportunity.budget_max)}</span>
-            </div>
-            
-            <div className={`flex items-center gap-2 ${isUrgent ? 'text-red-600' : 'text-slate-600'}`}>
-              {isUrgent ? <Clock className="w-4 h-4" /> : <Calendar className="w-4 h-4" />}
-              <span className="font-medium">
-                {daysTillDeadline > 0 ? `${daysTillDeadline} days left` : 'Deadline passed'}
-              </span>
-            </div>
-            
-            <div className="flex items-center gap-2">
-              <Badge className={`${categoryColors[opportunity.category]} border text-xs`}>
-                {opportunity.category.replace(/_/g, ' ')}
-              </Badge>
-            </div>
+
+            {/* Like/Dislike buttons - bottom right */}
+            {match && (
+              <div className="flex items-center gap-2">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleLike}
+                  className={`h-8 px-3 ${isLiked ? 'bg-green-50 text-green-600' : 'hover:bg-green-50 hover:text-green-600'} transition-colors`}
+                  title="Like this opportunity"
+                >
+                  <ThumbsUp className={`w-4 h-4 ${isLiked ? 'fill-current' : ''}`} />
+                </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={handleDislike}
+                  className="h-8 px-3 hover:bg-red-50 hover:text-red-600 transition-colors"
+                  title="Dislike this opportunity"
+                >
+                  <ThumbsDown className="w-4 h-4" />
+                </Button>
+              </div>
+            )}
           </div>
 
         </div>
@@ -259,6 +344,14 @@ export default function OpportunityCard({ opportunity, match, compact = false, o
         </DialogFooter>
       </DialogContent>
     </Dialog>
+
+    {/* Dislike Feedback Dialog */}
+    <DislikeFeedbackDialog
+      open={showDislikeDialog}
+      onOpenChange={setShowDislikeDialog}
+      opportunityTitle={opportunity.title}
+      onSubmit={handleDislikeFeedbackSubmit}
+    />
   </>
   );
 }

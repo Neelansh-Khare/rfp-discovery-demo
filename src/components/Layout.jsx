@@ -1,7 +1,8 @@
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Search, Bookmark, BarChart3, User } from "lucide-react";
+import { Search, Bookmark, BarChart3, User, Bell } from "lucide-react";
 import logo from "../assets/500x500-NC_Logo.png";
+import { Company } from "@/entities/all";
 
 const navigationItems = [
 	{
@@ -23,6 +24,23 @@ const navigationItems = [
 
 export default function Layout({ children }) {
 	const location = useLocation();
+	const [showNotifications, setShowNotifications] = React.useState(false);
+	const [companyName, setCompanyName] = React.useState("Loading...");
+
+	React.useEffect(() => {
+		const loadCompany = async () => {
+			try {
+				const companies = await Company.list();
+				if (companies.length > 0) {
+					setCompanyName(companies[0].name);
+				}
+			} catch (error) {
+				console.error("Error loading company:", error);
+				setCompanyName("RFP Discovery");
+			}
+		};
+		loadCompany();
+	}, []);
 
 	return (
 		<div className="min-h-screen flex flex-col w-full bg-slate-50">
@@ -40,7 +58,7 @@ export default function Layout({ children }) {
 							<h2 className="font-bold text-slate-900 text-lg">
 								RFP Discovery
 							</h2>
-							<p className="text-xs text-slate-500">MODUS Planning</p>
+							<p className="text-xs text-slate-500">{companyName}</p>
 						</div>
 					</div>
 
@@ -66,8 +84,50 @@ export default function Layout({ children }) {
 						})}
 					</nav>
 
-					{/* User Profile */}
+					{/* User Profile & Notifications */}
 					<div className="flex items-center gap-3">
+						{/* Notifications */}
+						<div className="relative">
+							<button
+								onClick={() => setShowNotifications(!showNotifications)}
+								className="relative p-2 rounded-lg hover:bg-slate-100 transition-colors"
+							>
+								<Bell className="w-5 h-5 text-slate-600" />
+								{/* Notification badge */}
+								<span className="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"></span>
+							</button>
+
+							{/* Notifications Dropdown */}
+							{showNotifications && (
+								<>
+									{/* Backdrop */}
+									<div
+										className="fixed inset-0 z-10"
+										onClick={() => setShowNotifications(false)}
+									/>
+									{/* Dropdown */}
+									<div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-slate-200 z-20">
+										<div className="p-4 border-b border-slate-200">
+											<h3 className="font-semibold text-slate-900">Notifications</h3>
+										</div>
+										<div className="p-4">
+											<div className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors">
+												<div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
+												<div className="flex-1">
+													<p className="text-sm font-medium text-slate-900">Hello!</p>
+													<p className="text-xs text-slate-500 mt-1">
+														This is a placeholder notification
+													</p>
+													<p className="text-xs text-slate-400 mt-1">Just now</p>
+												</div>
+											</div>
+										</div>
+									</div>
+								</>
+							)}
+						</div>
+
+						{/* Profile */}
 						<Link
 							to="/profile"
 							className="flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-slate-100 transition-colors"

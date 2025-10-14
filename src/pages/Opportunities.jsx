@@ -6,11 +6,31 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Filter, SlidersHorizontal, Download } from "lucide-react";
+import { Search, Filter, SlidersHorizontal, Download, Plus } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
+import { format } from "date-fns";
 
 import OpportunityCard from "../components/opportunities/OpportunityCard";
 import OpportunityFilters from "../components/opportunities/OpportunityFilters";
+import ManualRFPEntryDialog from "../components/opportunities/ManualRFPEntryDialog";
+
+// Region name mapping
+const regionNames = {
+  british_columbia: "British Columbia",
+  alberta: "Alberta",
+  ontario: "Ontario",
+  quebec: "Quebec",
+  saskatchewan: "Saskatchewan",
+  manitoba: "Manitoba",
+  new_brunswick: "New Brunswick",
+  nova_scotia: "Nova Scotia",
+  prince_edward_island: "Prince Edward Island",
+  newfoundland_labrador: "Newfoundland & Labrador",
+  northwest_territories: "Northwest Territories",
+  nunavut: "Nunavut",
+  yukon: "Yukon",
+  national: "National"
+};
 
 export default function Opportunities() {
   const [opportunities, setOpportunities] = useState([]);
@@ -19,6 +39,7 @@ export default function Opportunities() {
   const [searchTerm, setSearchTerm] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
+  const [showManualEntry, setShowManualEntry] = useState(false);
   const [company, setCompany] = useState(null);
 
   const [filters, setFilters] = useState({
@@ -192,6 +213,91 @@ export default function Opportunities() {
     }
   };
 
+  const handleDislikeOpportunity = (opportunityId) => {
+    // Remove the disliked opportunity from the list
+    setFilteredOpportunities(prev => prev.filter(opp => opp.id !== opportunityId));
+    setOpportunities(prev => prev.filter(opp => opp.id !== opportunityId));
+  };
+
+  const handleExportCSV = () => {
+    try {
+      // Helper function to format budget
+      const formatBudget = (min, max) => {
+        if (min && max) return `$${min.toLocaleString()} - $${max.toLocaleString()} CAD`;
+        if (min) return `$${min.toLocaleString()}+ CAD`;
+        if (max) return `Up to $${max.toLocaleString()} CAD`;
+        return "Budget not disclosed";
+      };
+
+      // Prepare CSV data
+      const csvRows = [];
+      const headers = [
+        'Title',
+        'Organization',
+        'Category',
+        'Region',
+        'Budget',
+        'Deadline',
+        'Relevance Score',
+        'Description',
+        'Source URL'
+      ];
+      csvRows.push(headers.join(','));
+
+      filteredOpportunities.forEach(opp => {
+        const match = matches.find(m => m.opportunity_id === opp.id);
+        const row = [
+          `"${opp.title?.replace(/"/g, '""') || ''}"`,
+          `"${opp.buyer_organization?.replace(/"/g, '""') || ''}"`,
+          `"${opp.category?.replace(/_/g, ' ') || ''}"`,
+          `"${regionNames[opp.region] || opp.region || ''}"`,
+          `"${formatBudget(opp.budget_min, opp.budget_max)}"`,
+          opp.deadline ? format(new Date(opp.deadline), 'yyyy-MM-dd') : '',
+          match?.relevance_score || 'N/A',
+          `"${opp.description?.replace(/"/g, '""')?.replace(/\n/g, ' ') || ''}"`,
+          opp.source_url || ''
+        ];
+        csvRows.push(row.join(','));
+      });
+
+      // Create blob and download
+      const csvString = csvRows.join('\n');
+      const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `rfp-opportunities-${format(new Date(), 'yyyy-MM-dd')}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Error exporting CSV:", error);
+      alert("Failed to export CSV. Please try again.");
+    }
+  };
+
+  const handleManualRFPSubmit = async (opportunityData) => {
+    try {
+      // Generate a unique ID for the manual entry
+      const newOpportunity = {
+        ...opportunityData,
+        id: `manual_${Date.now()}`,
+        rfp_number: `MANUAL-${Date.now()}`,
+      };
+
+      // Add to opportunities list immediately (optimistic update)
+      setOpportunities(prev => [newOpportunity, ...prev]);
+
+      // Note: This is a demo - in production, you would call:
+      // await Opportunity.create(newOpportunity);
+
+    } catch (error) {
+      console.error("Error creating manual RFP:", error);
+      alert("Failed to create RFP entry. Please try again.");
+    }
+  };
+
   return (
     <div className="flex h-screen bg-slate-50 overflow-hidden">
       {/* Filters Sidebar */}
@@ -226,7 +332,19 @@ export default function Opportunities() {
                 <SlidersHorizontal className="w-4 h-4 mr-2" />
                 Filters
               </Button>
-              <Button variant="outline" className="flex-1 md:flex-none">
+              <Button
+                variant="outline"
+                className="flex-1 md:flex-none"
+                onClick={() => setShowManualEntry(true)}
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add RFP
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 md:flex-none"
+                onClick={handleExportCSV}
+              >
                 <Download className="w-4 h-4 mr-2" />
                 Export
               </Button>
@@ -277,6 +395,7 @@ export default function Opportunities() {
                     match={match}
                     onSave={handleSaveOpportunity}
                     onUnsave={handleUnsaveOpportunity}
+                    onDislike={handleDislikeOpportunity}
                   />
                 );
               })}
@@ -290,6 +409,13 @@ export default function Opportunities() {
           )}
         </div>
       </div>
+
+      {/* Manual RFP Entry Dialog */}
+      <ManualRFPEntryDialog
+        open={showManualEntry}
+        onOpenChange={setShowManualEntry}
+        onSubmit={handleManualRFPSubmit}
+      />
     </div>
   );
 }
