@@ -174,16 +174,16 @@ export default function ManualRFPEntryDialog({ open, onOpenChange, onSubmit }) {
             {errors.buyer_organization && <p className="text-sm text-red-500">{errors.buyer_organization}</p>}
           </div>
 
-          {/* Category and Region - Side by side */}
+          {/* Specialization and Region - Side by side */}
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="category">Category *</Label>
+              <Label htmlFor="category">Specialization *</Label>
               <Select
                 value={formData.category}
                 onValueChange={(value) => handleChange('category', value)}
               >
                 <SelectTrigger className={errors.category ? 'border-red-500' : ''}>
-                  <SelectValue placeholder="Select category" />
+                  <SelectValue placeholder="Select specialization" />
                 </SelectTrigger>
                 <SelectContent>
                   {STANDARD_CATEGORIES.map(cat => (

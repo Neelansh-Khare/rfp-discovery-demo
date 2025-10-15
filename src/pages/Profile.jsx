@@ -6,15 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Building2, Save, Plus, X, AlertCircle, ChevronDown, ChevronUp } from "lucide-react";
+import { Building2, Save, AlertCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { STANDARD_CATEGORIES } from "@/constants/categories";
 
 // Profile edit rate limiting constants
 const PROFILE_EDIT_STORAGE_KEY = 'profile_edit_history';
-const MAX_EDITS_PER_WEEK = 3; // Changed from per day to per week
+const MAX_EDITS_PER_WEEK = 3; // 3 edits per week
 
 const regions = [
   { value: "british_columbia", label: "British Columbia" },
@@ -57,39 +55,25 @@ const getButtonColor = (editsRemaining) => {
   if (editsRemaining === 0) return "bg-slate-400 hover:bg-slate-400 cursor-not-allowed opacity-60";
   if (editsRemaining === 1) return "bg-red-500 hover:bg-red-600";
   if (editsRemaining === 2) return "bg-yellow-500 hover:bg-yellow-600";
-  return "bg-green-500 hover:bg-green-600"; // 3 edits remaining
+  return "bg-neura-teal hover:bg-neura-lightTeal"; // 3 edits remaining - NeuraCities green
 };
 
 export default function Profile() {
   const [company, setCompany] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
-  const [newKeyword, setNewKeyword] = useState("");
-  const [newExcludedKeyword, setNewExcludedKeyword] = useState("");
-  const [newCapability, setNewCapability] = useState("");
-  const [newCertification, setNewCertification] = useState("");
   const [editCount, setEditCount] = useState(getEditHistory().length);
-  const [expandedSections, setExpandedSections] = useState({
-    capabilities: true,
-    certifications: true
-  });
   const { toast } = useToast();
-
-  const toggleSection = (section) => {
-    setExpandedSections(prev => ({ ...prev, [section]: !prev[section] }));
-  };
 
   const [formData, setFormData] = useState({
     name: "",
-    description: "",
+    services_capabilities: "",
+    mission_values: "",
+    company_overview: "",
     industry_sectors: [],
     target_regions: [],
-    capabilities: [],
-    keywords: [],
-    excluded_keywords: [],
     min_contract_value: "",
     max_contract_value: "",
-    certifications: [],
     team_size: ""
   });
 
@@ -106,15 +90,13 @@ export default function Profile() {
         setCompany(comp);
         setFormData({
           name: comp.name || "",
-          description: comp.description || "",
+          services_capabilities: comp.services_capabilities || "",
+          mission_values: comp.mission_values || "",
+          company_overview: comp.company_overview || "",
           industry_sectors: comp.industry_sectors || [],
           target_regions: comp.target_regions || [],
-          capabilities: comp.capabilities || [],
-          keywords: comp.keywords || [],
-          excluded_keywords: comp.excluded_keywords || [],
           min_contract_value: comp.min_contract_value || "",
           max_contract_value: comp.max_contract_value || "",
-          certifications: comp.certifications || [],
           team_size: comp.team_size || ""
         });
       }
@@ -134,23 +116,6 @@ export default function Profile() {
       [field]: prev[field].includes(value)
         ? prev[field].filter(item => item !== value)
         : [...prev[field], value]
-    }));
-  };
-
-  const addToArrayField = (field, value, setter) => {
-    if (value.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        [field]: [...(prev[field] || []), value.trim()]
-      }));
-      setter("");
-    }
-  };
-
-  const removeFromArrayField = (field, index) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: prev[field].filter((_, i) => i !== index)
     }));
   };
 
@@ -264,288 +229,129 @@ export default function Profile() {
           </Card>
         )}
 
-        <div className="grid lg:grid-cols-3 gap-8">
+        <div className="space-y-6">
           {/* Basic Information */}
-          <div className="lg:col-span-2 space-y-6">
-            <Card className="shadow-sm border-slate-200">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="w-5 h-5" />
-                  Basic Information
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6">
+          <Card className="shadow-sm border-slate-200">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Building2 className="w-5 h-5" />
+                Basic Information
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="name">Company Name</Label>
+                <Input
+                  id="name"
+                  value={formData.name}
+                  onChange={(e) => handleInputChange('name', e.target.value)}
+                  placeholder="Your company name"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="company_overview">Company Overview</Label>
+                <Textarea
+                  id="company_overview"
+                  value={formData.company_overview}
+                  onChange={(e) => handleInputChange('company_overview', e.target.value)}
+                  placeholder="Provide a brief overview of your company..."
+                  className="min-h-24"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="services_capabilities">Services & Capabilities</Label>
+                <Textarea
+                  id="services_capabilities"
+                  value={formData.services_capabilities}
+                  onChange={(e) => handleInputChange('services_capabilities', e.target.value)}
+                  placeholder="Describe your core services, capabilities, and areas of expertise..."
+                  className="min-h-32"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="mission_values">Mission & Values</Label>
+                <Textarea
+                  id="mission_values"
+                  value={formData.mission_values}
+                  onChange={(e) => handleInputChange('mission_values', e.target.value)}
+                  placeholder="Share your company's mission, values, and what sets you apart..."
+                  className="min-h-32"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="name">Company Name</Label>
+                  <Label htmlFor="minBudget">Min Contract Value (CAD)</Label>
                   <Input
-                    id="name"
-                    value={formData.name}
-                    onChange={(e) => handleInputChange('name', e.target.value)}
-                    placeholder="Your company name"
+                    id="minBudget"
+                    type="number"
+                    value={formData.min_contract_value}
+                    onChange={(e) => handleInputChange('min_contract_value', e.target.value)}
+                    placeholder="10000"
                   />
                 </div>
-
                 <div className="space-y-2">
-                  <Label htmlFor="description">Company Description</Label>
-                  <Textarea
-                    id="description"
-                    value={formData.description}
-                    onChange={(e) => handleInputChange('description', e.target.value)}
-                    placeholder="Describe your company, services, and expertise..."
-                    className="min-h-24"
-                  />
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="minBudget">Min Contract Value (CAD)</Label>
-                    <Input
-                      id="minBudget"
-                      type="number"
-                      value={formData.min_contract_value}
-                      onChange={(e) => handleInputChange('min_contract_value', e.target.value)}
-                      placeholder="10000"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="maxBudget">Max Contract Value (CAD)</Label>
-                    <Input
-                      id="maxBudget"
-                      type="number"
-                      value={formData.max_contract_value}
-                      onChange={(e) => handleInputChange('max_contract_value', e.target.value)}
-                      placeholder="1000000"
-                    />
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Industry Sectors */}
-            <Card className="shadow-sm border-slate-200">
-              <CardHeader>
-                <CardTitle>Industry Sectors</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-3 max-h-64 overflow-y-auto">
-                  {STANDARD_CATEGORIES.map((industry) => (
-                    <div key={industry.value} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={industry.value}
-                        checked={formData.industry_sectors.includes(industry.value)}
-                        onCheckedChange={() => toggleArrayField('industry_sectors', industry.value)}
-                      />
-                      <Label htmlFor={industry.value} className="text-sm">
-                        {industry.label}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Target Regions */}
-            <Card className="shadow-sm border-slate-200">
-              <CardHeader>
-                <CardTitle>Target Regions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 gap-3">
-                  {regions.map((region) => (
-                    <div key={region.value} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={region.value}
-                        checked={formData.target_regions.includes(region.value)}
-                        onCheckedChange={() => toggleArrayField('target_regions', region.value)}
-                      />
-                      <Label htmlFor={region.value} className="text-sm">
-                        {region.label}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Keywords and Capabilities */}
-          <div className="space-y-6">
-            {/* Keywords */}
-            <Card className="shadow-sm border-slate-200">
-              <CardHeader>
-                <CardTitle>Keywords to Match</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-2">
+                  <Label htmlFor="maxBudget">Max Contract Value (CAD)</Label>
                   <Input
-                    value={newKeyword}
-                    onChange={(e) => setNewKeyword(e.target.value)}
-                    placeholder="Add keyword"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        addToArrayField('keywords', newKeyword, setNewKeyword);
-                      }
-                    }}
+                    id="maxBudget"
+                    type="number"
+                    value={formData.max_contract_value}
+                    onChange={(e) => handleInputChange('max_contract_value', e.target.value)}
+                    placeholder="1000000"
                   />
-                  <Button
-                    size="sm"
-                    onClick={() => addToArrayField('keywords', newKeyword, setNewKeyword)}
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
                 </div>
-                <div className="flex flex-wrap gap-2">
-                  {formData.keywords.map((keyword, index) => (
-                    <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                      {keyword}
-                      <button
-                        onClick={() => removeFromArrayField('keywords', index)}
-                        className="ml-1 hover:text-red-600"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* Excluded Keywords */}
-            <Card className="shadow-sm border-slate-200">
-              <CardHeader>
-                <CardTitle>Keywords to Avoid</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex gap-2">
-                  <Input
-                    value={newExcludedKeyword}
-                    onChange={(e) => setNewExcludedKeyword(e.target.value)}
-                    placeholder="Add excluded keyword"
-                    onKeyPress={(e) => {
-                      if (e.key === 'Enter') {
-                        addToArrayField('excluded_keywords', newExcludedKeyword, setNewExcludedKeyword);
-                      }
-                    }}
-                  />
-                  <Button
-                    size="sm"
-                    onClick={() => addToArrayField('excluded_keywords', newExcludedKeyword, setNewExcludedKeyword)}
-                  >
-                    <Plus className="w-4 h-4" />
-                  </Button>
-                </div>
-                <div className="flex flex-wrap gap-2">
-                  {formData.excluded_keywords.map((keyword, index) => (
-                    <Badge key={index} variant="destructive" className="flex items-center gap-1">
-                      {keyword}
-                      <button
-                        onClick={() => removeFromArrayField('excluded_keywords', index)}
-                        className="ml-1 hover:text-red-800"
-                      >
-                        <X className="w-3 h-3" />
-                      </button>
-                    </Badge>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Capabilities - Collapsible */}
-            <Card className="shadow-sm border-slate-200">
-              <CardHeader
-                className="cursor-pointer hover:bg-slate-50 transition-colors"
-                onClick={() => toggleSection('capabilities')}
-              >
-                <div className="flex justify-between items-center">
-                  <CardTitle>Key Capabilities ({formData.capabilities.length})</CardTitle>
-                  {expandedSections.capabilities ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                </div>
-              </CardHeader>
-              {expandedSections.capabilities && (
-                <CardContent className="space-y-4">
-                  <div className="flex gap-2">
-                    <Input
-                      value={newCapability}
-                      onChange={(e) => setNewCapability(e.target.value)}
-                      placeholder="Add capability"
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          addToArrayField('capabilities', newCapability, setNewCapability);
-                        }
-                      }}
+          {/* Company Specialization */}
+          <Card className="shadow-sm border-slate-200">
+            <CardHeader>
+              <CardTitle>Company Specialization</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-64 overflow-y-auto">
+                {STANDARD_CATEGORIES.map((industry) => (
+                  <div key={industry.value} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={industry.value}
+                      checked={formData.industry_sectors.includes(industry.value)}
+                      onCheckedChange={() => toggleArrayField('industry_sectors', industry.value)}
                     />
-                    <Button
-                      size="sm"
-                      onClick={() => addToArrayField('capabilities', newCapability, setNewCapability)}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
+                    <Label htmlFor={industry.value} className="text-sm">
+                      {industry.label}
+                    </Label>
                   </div>
-                  <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
-                    {formData.capabilities.map((capability, index) => (
-                      <Badge key={index} variant="outline" className="flex items-center gap-1">
-                        {capability}
-                        <button
-                          onClick={() => removeFromArrayField('capabilities', index)}
-                          className="ml-1 hover:text-red-600"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              )}
-            </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
 
-            {/* Certifications - Collapsible */}
-            <Card className="shadow-sm border-slate-200">
-              <CardHeader
-                className="cursor-pointer hover:bg-slate-50 transition-colors"
-                onClick={() => toggleSection('certifications')}
-              >
-                <div className="flex justify-between items-center">
-                  <CardTitle>Certifications ({formData.certifications.length})</CardTitle>
-                  {expandedSections.certifications ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                </div>
-              </CardHeader>
-              {expandedSections.certifications && (
-                <CardContent className="space-y-4">
-                  <div className="flex gap-2">
-                    <Input
-                      value={newCertification}
-                      onChange={(e) => setNewCertification(e.target.value)}
-                      placeholder="Add certification"
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          addToArrayField('certifications', newCertification, setNewCertification);
-                        }
-                      }}
+          {/* Target Regions */}
+          <Card className="shadow-sm border-slate-200">
+            <CardHeader>
+              <CardTitle>Target Regions</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                {regions.map((region) => (
+                  <div key={region.value} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={region.value}
+                      checked={formData.target_regions.includes(region.value)}
+                      onCheckedChange={() => toggleArrayField('target_regions', region.value)}
                     />
-                    <Button
-                      size="sm"
-                      onClick={() => addToArrayField('certifications', newCertification, setNewCertification)}
-                    >
-                      <Plus className="w-4 h-4" />
-                    </Button>
+                    <Label htmlFor={region.value} className="text-sm">
+                      {region.label}
+                    </Label>
                   </div>
-                  <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto">
-                    {formData.certifications.map((cert, index) => (
-                      <Badge key={index} variant="outline" className="flex items-center gap-1 bg-green-50 text-green-700 border-green-200">
-                        {cert}
-                        <button
-                          onClick={() => removeFromArrayField('certifications', index)}
-                          className="ml-1 hover:text-red-600"
-                        >
-                          <X className="w-3 h-3" />
-                        </button>
-                      </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              )}
-            </Card>
-          </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>

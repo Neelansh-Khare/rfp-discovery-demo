@@ -6,12 +6,9 @@ import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 
 const feedbackReasons = [
-  { id: 'not_relevant', label: 'Not relevant to our services' },
-  { id: 'budget_mismatch', label: 'Budget doesn\'t match our capacity' },
-  { id: 'wrong_region', label: 'Wrong geographic region' },
-  { id: 'timeline_issue', label: 'Timeline doesn\'t work for us' },
-  { id: 'lack_expertise', label: 'We lack the required expertise' },
-  { id: 'other', label: 'Other reason' }
+  { id: 'relevancy_incorrect', label: 'Relevancy score incorrect' },
+  { id: 'data_incorrect', label: 'Data is incorrect' },
+  { id: 'no_service_match', label: 'Doesn\'t match our services' }
 ];
 
 export default function DislikeFeedbackDialog({ open, onOpenChange, opportunityTitle, onSubmit }) {
@@ -27,13 +24,14 @@ export default function DislikeFeedbackDialog({ open, onOpenChange, opportunityT
   };
 
   const handleSubmit = () => {
-    // Simulate collecting feedback (not stored, just for UX)
-    console.log('Feedback collected:', {
+    // Collect feedback and pass it to parent
+    const feedback = {
       reasons: selectedReasons,
-      additionalFeedback
-    });
+      additionalFeedback,
+      timestamp: Date.now()
+    };
 
-    onSubmit();
+    onSubmit(feedback);
     handleClose();
   };
 
@@ -94,13 +92,6 @@ export default function DislikeFeedbackDialog({ open, onOpenChange, opportunityT
               placeholder="Any other details you'd like to share..."
               className="min-h-20 text-sm"
             />
-          </div>
-
-          {/* Info note */}
-          <div className="flex items-start gap-2 p-3 bg-blue-50 rounded-md">
-            <div className="text-xs text-blue-700">
-              <strong>Note:</strong> Your feedback helps our AI learn your preferences and improve future recommendations. This information is used to enhance your experience.
-            </div>
           </div>
         </div>
 

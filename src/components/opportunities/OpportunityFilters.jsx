@@ -51,7 +51,10 @@ export default function OpportunityFilters({ filters, onFiltersChange, onClose }
     <div className="h-full flex flex-col">
       <div className="p-6 border-b border-slate-200">
         <div className="flex justify-between items-center">
-          <h3 className="text-lg font-semibold text-slate-900">Filters</h3>
+          <div>
+            <h3 className="text-lg font-semibold text-slate-900">Filters</h3>
+            <p className="text-xs text-slate-500 mt-1">Filters pre-selected from company profile</p>
+          </div>
           <div className="flex gap-2">
             <Button variant="ghost" size="sm" onClick={clearAllFilters}>
               <RotateCcw className="w-4 h-4 mr-2" />
@@ -179,9 +182,9 @@ export default function OpportunityFilters({ filters, onFiltersChange, onClose }
           </div>
         </div>
 
-        {/* Industries - Checkboxes */}
+        {/* Company Specialization - Checkboxes */}
         <div className="space-y-3">
-          <Label className="text-sm font-medium">Industries</Label>
+          <Label className="text-sm font-medium">Company Specialization</Label>
           <div className="space-y-2 max-h-64 overflow-y-auto">
             {STANDARD_CATEGORIES.map(category => (
               <div key={category.value} className="flex items-center gap-2">

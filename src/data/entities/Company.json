@@ -6,29 +6,38 @@
       "type": "string",
       "description": "Company name"
     },
+    "company_overview": {
+      "type": "string",
+      "description": "Brief overview of the company"
+    },
+    "services_capabilities": {
+      "type": "string",
+      "description": "Detailed description of core services, capabilities, and areas of expertise"
+    },
+    "mission_values": {
+      "type": "string",
+      "description": "Company mission, values, and differentiators"
+    },
     "industry_sectors": {
       "type": "array",
       "items": {
         "type": "string",
         "enum": [
+          "policy_planning",
+          "engineering_planning",
+          "land_use",
           "construction",
-          "consulting",
-          "it_services",
-          "professional_services",
-          "engineering",
-          "maintenance",
-          "security",
-          "environmental",
-          "healthcare",
-          "education",
           "transportation",
-          "utilities",
-          "food_services",
-          "equipment_supply",
-          "software_development"
+          "technology",
+          "engagement",
+          "environmental_planning",
+          "economic_development",
+          "infrastructure_planning",
+          "urban_planning",
+          "other"
         ]
       },
-      "description": "Primary industry sectors"
+      "description": "Company specialization - primary industry sectors"
     },
     "target_regions": {
       "type": "array",
@@ -53,27 +62,6 @@
       },
       "description": "Target Canadian regions"
     },
-    "capabilities": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Key business capabilities and services"
-    },
-    "keywords": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Keywords to match opportunities"
-    },
-    "excluded_keywords": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Keywords to avoid in opportunities"
-    },
     "min_contract_value": {
       "type": "number",
       "description": "Minimum contract value (CAD)"
@@ -81,13 +69,6 @@
     "max_contract_value": {
       "type": "number",
       "description": "Maximum contract value (CAD)"
-    },
-    "certifications": {
-      "type": "array",
-      "items": {
-        "type": "string"
-      },
-      "description": "Company certifications"
     },
     "team_size": {
       "type": "string",

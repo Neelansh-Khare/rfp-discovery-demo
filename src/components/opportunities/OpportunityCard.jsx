@@ -58,6 +58,61 @@ const generateTooltipExplanation = (opportunity, score) => {
   return "Moderate match based on profile analysis.";
 };
 
+// LocalStorage keys for like/dislike persistence
+const LIKED_OPPORTUNITIES_KEY = 'liked_opportunities';
+const DISLIKED_OPPORTUNITIES_KEY = 'disliked_opportunities';
+
+// Helper functions for localStorage
+const getLikedOpportunities = () => {
+  try {
+    return JSON.parse(localStorage.getItem(LIKED_OPPORTUNITIES_KEY) || '[]');
+  } catch {
+    return [];
+  }
+};
+
+const getDislikedOpportunities = () => {
+  try {
+    return JSON.parse(localStorage.getItem(DISLIKED_OPPORTUNITIES_KEY) || '[]');
+  } catch {
+    return [];
+  }
+};
+
+const toggleLikedOpportunity = (opportunityId) => {
+  const liked = getLikedOpportunities();
+  const isLiked = liked.includes(opportunityId);
+
+  if (isLiked) {
+    // Remove from liked
+    const updated = liked.filter(id => id !== opportunityId);
+    localStorage.setItem(LIKED_OPPORTUNITIES_KEY, JSON.stringify(updated));
+    return false;
+  } else {
+    // Add to liked
+    liked.push(opportunityId);
+    localStorage.setItem(LIKED_OPPORTUNITIES_KEY, JSON.stringify(liked));
+    return true;
+  }
+};
+
+const toggleDislikedOpportunity = (opportunityId, feedback) => {
+  const disliked = getDislikedOpportunities();
+  const existingIndex = disliked.findIndex(item => item.id === opportunityId);
+
+  if (existingIndex !== -1) {
+    // Remove from disliked
+    disliked.splice(existingIndex, 1);
+    localStorage.setItem(DISLIKED_OPPORTUNITIES_KEY, JSON.stringify(disliked));
+    return false;
+  } else {
+    // Add to disliked
+    disliked.push({ id: opportunityId, feedback, timestamp: Date.now() });
+    localStorage.setItem(DISLIKED_OPPORTUNITIES_KEY, JSON.stringify(disliked));
+    return true;
+  }
+};
+
 export default function OpportunityCard({ opportunity, match, compact = false, onSave, onUnsave, onDislike }) {
   const [isSaved, setIsSaved] = React.useState(
     match?.status && ['saved', 'pursuing', 'submitted', 'won', 'lost'].includes(match.status)
@@ -68,9 +123,18 @@ export default function OpportunityCard({ opportunity, match, compact = false, o
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [shouldShowReadMore, setShouldShowReadMore] = React.useState(false);
   const [isLiked, setIsLiked] = React.useState(false);
+  const [isDisliked, setIsDisliked] = React.useState(false);
   const descriptionRef = React.useRef(null);
   const daysTillDeadline = Math.ceil((new Date(opportunity.deadline) - new Date()) / (1000 * 60 * 60 * 24));
   const isUrgent = daysTillDeadline <= 7;
+
+  // Load like/dislike state from localStorage on mount
+  React.useEffect(() => {
+    const likedOpportunities = getLikedOpportunities();
+    const dislikedOpportunities = getDislikedOpportunities();
+    setIsLiked(likedOpportunities.includes(opportunity.id));
+    setIsDisliked(dislikedOpportunities.some(item => item.id === opportunity.id));
+  }, [opportunity.id]);
 
   // Update isSaved when match prop changes
   React.useEffect(() => {
@@ -138,20 +202,29 @@ export default function OpportunityCard({ opportunity, match, compact = false, o
   };
 
   const handleLike = () => {
-    setIsLiked(true);
-    // Simulate AI learning (just UX feedback, not stored)
-    console.log('Liked opportunity:', opportunity.title);
+    const newLikedState = toggleLikedOpportunity(opportunity.id);
+    setIsLiked(newLikedState);
+    console.log(newLikedState ? 'Liked opportunity:' : 'Unliked opportunity:', opportunity.title);
   };
 
   const handleDislike = () => {
-    setShowDislikeDialog(true);
+    // If already disliked, toggle it off immediately
+    if (isDisliked) {
+      const newDislikedState = toggleDislikedOpportunity(opportunity.id, null);
+      setIsDisliked(newDislikedState);
+      console.log('Removed dislike from opportunity:', opportunity.title);
+    } else {
+      // Show dialog to collect feedback
+      setShowDislikeDialog(true);
+    }
   };
 
-  const handleDislikeFeedbackSubmit = () => {
-    // After feedback is submitted, remove the card from view
-    if (onDislike) {
-      onDislike(opportunity.id);
-    }
+  const handleDislikeFeedbackSubmit = (feedback) => {
+    // Save dislike with feedback to localStorage
+    const newDislikedState = toggleDislikedOpportunity(opportunity.id, feedback);
+    setIsDisliked(newDislikedState);
+    console.log('Disliked opportunity:', opportunity.title, 'Feedback:', feedback);
+    // No longer remove the card from view
   };
 
   return (
@@ -294,10 +367,10 @@ export default function OpportunityCard({ opportunity, match, compact = false, o
                   variant="ghost"
                   size="sm"
                   onClick={handleDislike}
-                  className="h-8 px-3 hover:bg-red-50 hover:text-red-600 transition-colors"
+                  className={`h-8 px-3 ${isDisliked ? 'bg-red-50 text-red-600' : 'hover:bg-red-50 hover:text-red-600'} transition-colors`}
                   title="Dislike this opportunity"
                 >
-                  <ThumbsDown className="w-4 h-4" />
+                  <ThumbsDown className={`w-4 h-4 ${isDisliked ? 'fill-current' : ''}`} />
                 </Button>
               </div>
             )}

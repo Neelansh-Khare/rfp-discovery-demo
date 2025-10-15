@@ -1,0 +1,9 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(gemini -a -p \"Analyze this entire React/Vite frontend codebase thoroughly. I need you to understand:\n\n1. Every page, component, and how they interact\n2. All state management patterns and data flows\n3. Where mock data is used and what it simulates\n4. The complete RFP (Request for Proposal) lifecycle from discovery to pipeline management\n5. All user interactions including like/dislike, save/unsave, filtering, searching\n6. The mock API layer in src/entities/all.js and what backend operations it simulates\n7. LocalStorage usage for persistence\n8. Profile configuration and how it affects matching\n9. The complete UI/UX flow from landing on dashboard to managing RFPs in pipeline\n\nPlease provide a detailed technical breakdown of the architecture, data models, component hierarchy, and all business logic. Be extremely thorough and precise.\")"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

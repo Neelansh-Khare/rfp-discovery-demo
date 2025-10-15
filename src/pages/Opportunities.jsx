@@ -57,6 +57,17 @@ export default function Opportunities() {
     loadOpportunities();
   }, []);
 
+  // Preselect filters based on company profile
+  useEffect(() => {
+    if (company && filters.regions.length === 0 && filters.categories.length === 0) {
+      setFilters(prev => ({
+        ...prev,
+        regions: company.target_regions || [],
+        categories: company.industry_sectors || []
+      }));
+    }
+  }, [company, filters.regions.length, filters.categories.length]);
+
   const applyFilters = useCallback(() => {
     let filtered = opportunities.filter(opp => {
       // Search term filter
