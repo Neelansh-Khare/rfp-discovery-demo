@@ -159,7 +159,10 @@ export default function Opportunities() {
       setCompany(userCompany);
 
       // Load opportunities
-      const opps = await Opportunity.filter({ status: "active" }, "-created_date");
+      const allOpps = await Opportunity.list();
+      const opps = allOpps.filter(
+        o => ["active", "closing_soon", "closed"].includes(o.status)
+      );
       setOpportunities(opps);
 
       // Load matches if company exists

@@ -156,6 +156,24 @@ export default function OpportunityFilters({ filters, onFiltersChange, onClose }
           </Select>
         </div>
 
+        {/* Status Filter */}
+        <div className="space-y-3">
+          <Label className="text-sm font-medium">Status</Label>
+          <Select
+            value={filters.status || "active"}
+            onValueChange={(value) => updateFilter('status', value)}
+          >
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="active">Active Only</SelectItem>
+              <SelectItem value="all">All (including closed)</SelectItem>
+              <SelectItem value="closed">Closed Only</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         {/* Regions - Checkboxes */}
         <div className="space-y-3">
           <Label className="text-sm font-medium">Regions</Label>
