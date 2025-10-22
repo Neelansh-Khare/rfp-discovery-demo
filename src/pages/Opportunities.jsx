@@ -99,7 +99,7 @@ export default function Opportunities() {
         const deadline = new Date(opp.deadline);
         const now = new Date();
         const daysDiff = (deadline - now) / (1000 * 60 * 60 * 24);
-        
+
         switch (filters.deadlineRange) {
           case "7days":
             if (daysDiff > 7) return false;
@@ -112,6 +112,15 @@ export default function Opportunities() {
             break;
         }
       }
+
+      // Status filter
+      if (filters.status === "active" && opp.status === "closed") {
+        return false;
+      }
+      if (filters.status === "closed" && opp.status !== "closed") {
+        return false;
+      }
+      // "all" status shows everything, no filtering needed
 
       return true;
     });

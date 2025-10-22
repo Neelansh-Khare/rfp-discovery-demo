@@ -196,7 +196,7 @@ const mockOpportunities = [
     "budget_max": null,
     "source_url": "https://abbotsford.bidsandtenders.ca/Module/Tenders/en/Tender/Detail/75e71f4a-4087-426e-b6d8-a6d31bcb0c7d/#Document",
     "documents": [],
-    "status": "closing_soon",
+    "status": "closed",
     "compliance_notes": ""
   },
   {
