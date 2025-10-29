@@ -217,6 +217,36 @@ export default function ManualRFPEntryDialog({ open, onOpenChange, onSubmit }) {
             </div>
           </div>
 
+          {/* Budget and Deadline - Side by side */}
+          <div className="grid grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label htmlFor="budget">Budget Value (CAD) - Optional</Label>
+              <Input
+                id="budget"
+                type="number"
+                placeholder="Enter budget value"
+                value={formData.budget}
+                onChange={(e) => handleChange('budget', e.target.value)}
+                min="0"
+                className={errors.budget ? 'border-red-500' : ''}
+              />
+              {errors.budget && <p className="text-sm text-red-500">{errors.budget}</p>}
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="deadline">Deadline *</Label>
+              <Input
+                id="deadline"
+                type="date"
+                value={formData.deadline}
+                onChange={(e) => handleChange('deadline', e.target.value)}
+                min={new Date().toISOString().split('T')[0]}
+                className={errors.deadline ? 'border-red-500' : ''}
+              />
+              {errors.deadline && <p className="text-sm text-red-500">{errors.deadline}</p>}
+            </div>
+          </div>
+
           {/* Description */}
           <div className="space-y-2">
             <Label htmlFor="description">Description *</Label>
@@ -228,35 +258,6 @@ export default function ManualRFPEntryDialog({ open, onOpenChange, onSubmit }) {
               className={`min-h-24 ${errors.description ? 'border-red-500' : ''}`}
             />
             {errors.description && <p className="text-sm text-red-500">{errors.description}</p>}
-          </div>
-
-          {/* Deadline */}
-          <div className="space-y-2">
-            <Label htmlFor="deadline">Deadline *</Label>
-            <Input
-              id="deadline"
-              type="date"
-              value={formData.deadline}
-              onChange={(e) => handleChange('deadline', e.target.value)}
-              min={new Date().toISOString().split('T')[0]}
-              className={errors.deadline ? 'border-red-500' : ''}
-            />
-            {errors.deadline && <p className="text-sm text-red-500">{errors.deadline}</p>}
-          </div>
-
-          {/* Budget Value */}
-          <div className="space-y-2">
-            <Label htmlFor="budget">Budget Value (CAD) - Optional</Label>
-            <Input
-              id="budget"
-              type="number"
-              placeholder="Enter budget value"
-              value={formData.budget}
-              onChange={(e) => handleChange('budget', e.target.value)}
-              min="0"
-              className={errors.budget ? 'border-red-500' : ''}
-            />
-            {errors.budget && <p className="text-sm text-red-500">{errors.budget}</p>}
           </div>
 
           {/* Relevancy Score */}

@@ -1,7 +1,7 @@
 // Standardized industry categories used across the application
 export const STANDARD_CATEGORIES = [
   { value: "policy_planning", label: "Policy Planning" },
-  { value: "engineering_planning", label: "Engineering Planning" },
+  { value: "engineering_planning", label: "Engineering" },
   { value: "land_use", label: "Land Use" },
   { value: "construction", label: "Construction" },
   { value: "transportation", label: "Transportation" },

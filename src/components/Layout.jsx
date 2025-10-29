@@ -114,11 +114,10 @@ export default function Layout({ children }) {
 											<div className="flex items-start gap-3 p-3 rounded-lg hover:bg-slate-50 transition-colors">
 												<div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
 												<div className="flex-1">
-													<p className="text-sm font-medium text-slate-900">Hello!</p>
+													<p className="text-sm font-medium text-slate-900">Data Last Updated</p>
 													<p className="text-xs text-slate-500 mt-1">
-														This is a placeholder notification
+														10/27/2025 8:46 PM
 													</p>
-													<p className="text-xs text-slate-400 mt-1">Just now</p>
 												</div>
 											</div>
 										</div>

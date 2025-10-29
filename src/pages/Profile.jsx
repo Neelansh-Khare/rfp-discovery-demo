@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Building2, Save, AlertCircle } from "lucide-react";
+import { Save, AlertCircle } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
 import { STANDARD_CATEGORIES } from "@/constants/categories";
 
@@ -233,8 +233,7 @@ export default function Profile() {
           {/* Basic Information */}
           <Card className="shadow-sm border-slate-200">
             <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Building2 className="w-5 h-5" />
+              <CardTitle>
                 Basic Information
               </CardTitle>
             </CardHeader>

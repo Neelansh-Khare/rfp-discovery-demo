@@ -58,10 +58,24 @@ export default function Dashboard() {
         .slice(0, 20);
 
       const topMatchesWithDetails = [];
+      const now = new Date();
+
       for (const match of topMatches) {
         const opportunity = opportunities.find(o => o.id === match.opportunity_id);
         if (opportunity) {
-          topMatchesWithDetails.push({ ...match, opportunity });
+          // Filter 1: Check if deadline has NOT passed
+          const deadline = new Date(opportunity.deadline);
+          if (deadline < now) {
+            continue; // Skip opportunities with passed deadlines
+          }
+
+          // Filter 2: Check if opportunity matches company profile filters
+          const matchesRegion = userCompany?.target_regions?.includes(opportunity.region);
+          const matchesCategory = userCompany?.industry_sectors?.includes(opportunity.category);
+
+          if (matchesRegion && matchesCategory) {
+            topMatchesWithDetails.push({ ...match, opportunity });
+          }
         }
       }
       setTopMatches(topMatchesWithDetails);

@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Filter, SlidersHorizontal, Download, Plus } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Search, Filter, SlidersHorizontal, Download, Plus, ExternalLink, Database } from "lucide-react";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format } from "date-fns";
 
@@ -32,6 +33,43 @@ const regionNames = {
   national: "National"
 };
 
+// Source URLs for RFP opportunities
+const SOURCE_URLS = [
+  "https://www.pibc.bc.ca",
+  "https://www.civicinfo.bc.ca/bids",
+  "https://www.destinationbc.ca/work-with-us/contractor-supplier/",
+  "https://www.surrey.ca/business-economy/tenders-rfqs-rfps",
+  "https://bids.sciquest.com/apps/Router/PublicEvent?CustomerOrg=CityofVancouver",
+  "https://www.fernie.ca/EN/main/business/bid-opportunities.html",
+  "https://www.penticton.ca/business-building/bid-opportunities/open-bid-opportunities",
+  "https://www.coquitlam.ca/Bids.aspx",
+  "https://abbotsford.bidsandtenders.ca/Module/Tenders/en/",
+  "https://burnaby.bidsandtenders.ca/Module/Tenders/en/",
+  "https://richmond.bidsandtenders.ca/Module/Tenders/en/",
+  "https://metrovancouver.bidsandtenders.ca/Module/Tenders/en/",
+  "https://portmoody.bidsandtenders.ca/Module/Tenders/en",
+  "https://dnv.bidsandtenders.ca/Module/Tenders/en",
+  "https://tol.bidsandtenders.ca/Module/Tenders/en",
+  "https://newwestcity.bidsandtenders.ca/Module/Tenders/en",
+  "https://www.merx.com/public/solicitations/open?keywords=RFP&publishDate=&solSearchStatus=openSolicitationsTab&sortBy=&sortDirection=&pageNumberSelect=1&location=379",
+  "https://www.destinationbc.ca/work-with-us/contractor-supplier/",
+  "https://www.bcferries.com/business-ops",
+  "https://service.ariba.com/Discovery.aw/ad/profile?key=translink",
+  "https://www.fvrd.ca/EN/main/government/tenders-rfps.html",
+  "https://rdco.bidsandtenders.ca/Module/Tenders/en",
+  "https://rdn.bc.ca/current-bid-opportunities",
+  "https://www.rdos.bc.ca/newsandevents/rdos-news/tenders-and-rfps/",
+  "https://www.rdno.ca/our-communities/public-tenders-rfps",
+  "https://nanaimo.bidsandtenders.ca/Module/Tenders/en",
+  "https://victoria.bonfirehub.ca/portal/?tab=openOpportunities",
+  "https://princegeorge.bidsandtenders.ca/Module/Tenders/en",
+  "https://mapleridge.bidsandtenders.ca/Module/Tenders/en",
+  "https://www.whiterockcity.ca/bids.aspx",
+  "https://www.portalberni.ca/bid-opportunities",
+  "https://www.vernon.ca/business/bid-opportunities/all-open-requests#gsc.tab=0",
+  "https://campbellriver.bidsandtenders.ca/Module/Tenders/en"
+];
+
 export default function Opportunities() {
   const [opportunities, setOpportunities] = useState([]);
   const [matches, setMatches] = useState([]);
@@ -40,6 +78,7 @@ export default function Opportunities() {
   const [isLoading, setIsLoading] = useState(true);
   const [showFilters, setShowFilters] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
+  const [showSourcesDialog, setShowSourcesDialog] = useState(false);
   const [company, setCompany] = useState(null);
 
   const [filters, setFilters] = useState({
@@ -69,6 +108,12 @@ export default function Opportunities() {
   }, [company, filters.regions.length, filters.categories.length]);
 
   const applyFilters = useCallback(() => {
+    // If status is "all", show everything regardless of other filters
+    if (filters.status === "all") {
+      setFilteredOpportunities(opportunities);
+      return;
+    }
+
     let filtered = opportunities.filter(opp => {
       // Search term filter
       if (searchTerm && !opp.title.toLowerCase().includes(searchTerm.toLowerCase()) &&
@@ -113,14 +158,17 @@ export default function Opportunities() {
         }
       }
 
-      // Status filter
-      if (filters.status === "active" && opp.status === "closed") {
-        return false;
+      // Status filter - based on deadline, not status field
+      const deadline = new Date(opp.deadline);
+      const now = new Date();
+      const isActive = deadline >= now; // Active if deadline hasn't passed
+
+      if (filters.status === "active" && !isActive) {
+        return false; // Filter out closed/expired opportunities
       }
-      if (filters.status === "closed" && opp.status !== "closed") {
-        return false;
+      if (filters.status === "closed" && isActive) {
+        return false; // Filter out active opportunities
       }
-      // "all" status shows everything, no filtering needed
 
       return true;
     });
@@ -326,10 +374,11 @@ export default function Opportunities() {
       {/* Filters Sidebar */}
       {showFilters && (
         <div className="w-80 bg-white border-r border-slate-200 flex-shrink-0">
-          <OpportunityFilters 
+          <OpportunityFilters
             filters={filters}
             onFiltersChange={setFilters}
             onClose={() => setShowFilters(false)}
+            company={company}
           />
         </div>
       )}
@@ -354,6 +403,14 @@ export default function Opportunities() {
               >
                 <SlidersHorizontal className="w-4 h-4 mr-2" />
                 Filters
+              </Button>
+              <Button
+                variant="outline"
+                className="flex-1 md:flex-none"
+                onClick={() => setShowSourcesDialog(true)}
+              >
+                <Database className="w-4 h-4 mr-2" />
+                Sources
               </Button>
               <Button
                 variant="outline"
@@ -439,6 +496,47 @@ export default function Opportunities() {
         onOpenChange={setShowManualEntry}
         onSubmit={handleManualRFPSubmit}
       />
+
+      {/* Sources Dialog */}
+      <Dialog open={showSourcesDialog} onOpenChange={setShowSourcesDialog}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogClose onClick={() => setShowSourcesDialog(false)} />
+          <DialogHeader>
+            <DialogTitle>RFP Data Sources</DialogTitle>
+            <DialogDescription>
+              We monitor {SOURCE_URLS.length} sources across British Columbia for RFP opportunities
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="space-y-2">
+              {SOURCE_URLS.map((url, index) => (
+                <div
+                  key={index}
+                  className="flex items-center gap-3 p-3 rounded-lg border border-slate-200 hover:bg-slate-50 transition-colors"
+                >
+                  <ExternalLink className="w-4 h-4 text-slate-400 flex-shrink-0" />
+                  <a
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-sm text-neura-teal hover:underline break-all"
+                  >
+                    {url}
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              onClick={() => setShowSourcesDialog(false)}
+              className="bg-neura-teal hover:bg-neura-lightTeal text-white"
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

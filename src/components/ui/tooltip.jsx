@@ -37,7 +37,7 @@ const TooltipContent = ({ children, isVisible, className = "", ...props }) => {
 
   return (
     <div
-      className={`absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-sm text-white bg-slate-900 rounded-lg shadow-lg whitespace-nowrap ${className}`}
+      className={`absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-2 text-sm text-white bg-slate-900 rounded-lg shadow-lg ${className}`}
       {...props}
     >
       {children}

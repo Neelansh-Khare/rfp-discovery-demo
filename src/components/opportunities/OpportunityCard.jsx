@@ -19,7 +19,8 @@ import {
   ChevronDown,
   ChevronUp,
   ThumbsUp,
-  ThumbsDown
+  ThumbsDown,
+  Info
 } from "lucide-react";
 
 const regionNames = {
@@ -39,23 +40,21 @@ const regionNames = {
   national: "National"
 };
 
-// Generate mock tooltip explanation
-const generateTooltipExplanation = (opportunity, score) => {
-  const categoryMatch = `Strong alignment with ${opportunity.category?.replace(/_/g, ' ')} sector`;
-  const regionMatch = `Located in your target region: ${regionNames[opportunity.region] || opportunity.region}`;
-  const budgetMatch = "Budget range matches your capacity";
-  const keywordsMatch = "Keywords match your capabilities profile";
-  const pastExperience = "Similar past project experience detected";
-
-  const explanations = [categoryMatch, regionMatch, budgetMatch, keywordsMatch, pastExperience];
-
-  // Return 1-2 reasons based on score
-  if (score > 85) {
-    return explanations.slice(0, 2).join('. ') + '.';
-  } else if (score > 75) {
-    return explanations[0] + '.';
+// Get match rationale - use actual match_rationale from OpportunityMatch entity
+const getMatchRationale = (match) => {
+  if (match?.match_rationale) {
+    return match.match_rationale;
   }
-  return "Moderate match based on profile analysis.";
+  return "No match rationale available.";
+};
+
+// Get truncated version for tooltip preview
+const getTruncatedRationale = (match, maxLength = 100) => {
+  const rationale = getMatchRationale(match);
+  if (rationale.length <= maxLength) {
+    return rationale;
+  }
+  return rationale.substring(0, maxLength) + "...";
 };
 
 // LocalStorage keys for like/dislike persistence
@@ -119,6 +118,7 @@ export default function OpportunityCard({ opportunity, match, compact = false, o
   );
   const [showNoteDialog, setShowNoteDialog] = React.useState(false);
   const [showDislikeDialog, setShowDislikeDialog] = React.useState(false);
+  const [showRationaleDialog, setShowRationaleDialog] = React.useState(false);
   const [noteText, setNoteText] = React.useState('');
   const [isExpanded, setIsExpanded] = React.useState(false);
   const [shouldShowReadMore, setShouldShowReadMore] = React.useState(false);
@@ -256,24 +256,14 @@ export default function OpportunityCard({ opportunity, match, compact = false, o
 
               {match && (
                 <div className="flex items-center gap-2">
-                  {match.relevance_score > 75 ? (
-                    <Tooltip>
-                      <TooltipTrigger asChild>
-                        <Badge className={`${getRelevanceColor(match.relevance_score)} border font-semibold hover:bg-transparent cursor-help`}>
-                          <TrendingUp className="w-3 h-3 mr-1" />
-                          {match.relevance_score}% Relevance Score
-                        </Badge>
-                      </TooltipTrigger>
-                      <TooltipContent className="max-w-xs whitespace-normal">
-                        {generateTooltipExplanation(opportunity, match.relevance_score)}
-                      </TooltipContent>
-                    </Tooltip>
-                  ) : (
-                    <Badge className={`${getRelevanceColor(match.relevance_score)} border font-semibold hover:bg-transparent`}>
-                      <TrendingUp className="w-3 h-3 mr-1" />
-                      {match.relevance_score}% Relevance Score
-                    </Badge>
-                  )}
+                  <Badge
+                    className={`${getRelevanceColor(match.relevance_score)} border font-semibold cursor-pointer hover:opacity-80 transition-opacity`}
+                    onClick={() => setShowRationaleDialog(true)}
+                  >
+                    <TrendingUp className="w-3 h-3 mr-1" />
+                    {match.relevance_score}% Relevance Score
+                    <Info className="w-3 h-3 ml-1" />
+                  </Badge>
                   <Button
                     variant={isSaved ? "default" : "outline"}
                     size="sm"
@@ -425,6 +415,40 @@ export default function OpportunityCard({ opportunity, match, compact = false, o
       opportunityTitle={opportunity.title}
       onSubmit={handleDislikeFeedbackSubmit}
     />
+
+    {/* Match Rationale Dialog */}
+    <Dialog open={showRationaleDialog} onOpenChange={setShowRationaleDialog}>
+      <DialogContent className="max-w-4xl w-[90vw]">
+        <DialogClose onClick={() => setShowRationaleDialog(false)} />
+        <DialogHeader>
+          <DialogTitle>Match Rationale</DialogTitle>
+          <DialogDescription>
+            Why this opportunity matches your company profile
+          </DialogDescription>
+        </DialogHeader>
+        <div className="py-4">
+          <div className="bg-slate-50 p-6 rounded-lg border border-slate-200">
+            <div className="flex items-start gap-3 mb-4">
+              <Badge className={`${getRelevanceColor(match?.relevance_score)} border font-semibold`}>
+                <TrendingUp className="w-3 h-3 mr-1" />
+                {match?.relevance_score}% Relevance Score
+              </Badge>
+            </div>
+            <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap break-words">
+              {getMatchRationale(match)}
+            </p>
+          </div>
+        </div>
+        <DialogFooter>
+          <Button
+            onClick={() => setShowRationaleDialog(false)}
+            className="bg-neura-teal hover:bg-neura-lightTeal text-white"
+          >
+            Close
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   </>
   );
 }

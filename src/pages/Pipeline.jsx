@@ -303,18 +303,9 @@ export default function Pipeline() {
                   })
                 ) : (
                   <div className="text-center py-12">
-                    <div className="w-16 h-16 mx-auto mb-4 text-slate-300">
-                      {getStatusIcon(status)}
-                    </div>
                     <h3 className="text-xl font-semibold text-slate-900 mb-2">
                       No {status === 'all' ? 'saved' : status} opportunities
                     </h3>
-                    <p className="text-slate-600">
-                      {status === 'all'
-                        ? 'Save opportunities from the Opportunities page to start tracking them'
-                        : `No opportunities in ${status} status yet`
-                      }
-                    </p>
                   </div>
                 )}
               </div>

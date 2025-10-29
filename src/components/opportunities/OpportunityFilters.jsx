@@ -21,7 +21,7 @@ const regions = [
   { value: "national", label: "National" }
 ];
 
-export default function OpportunityFilters({ filters, onFiltersChange, onClose }) {
+export default function OpportunityFilters({ filters, onFiltersChange, onClose, company }) {
   const updateFilter = (key, value) => {
     onFiltersChange({ ...filters, [key]: value });
   };
@@ -46,6 +46,16 @@ export default function OpportunityFilters({ filters, onFiltersChange, onClose }
       sortBy: "relevance"
     });
   };
+
+  // Filter regions to only show those selected in company profile
+  const availableRegions = regions.filter(region =>
+    company?.target_regions?.includes(region.value)
+  );
+
+  // Filter categories to only show those selected in company profile
+  const availableCategories = STANDARD_CATEGORIES.filter(category =>
+    company?.industry_sectors?.includes(category.value)
+  );
 
   return (
     <div className="h-full flex flex-col">
@@ -178,11 +188,7 @@ export default function OpportunityFilters({ filters, onFiltersChange, onClose }
         <div className="space-y-3">
           <Label className="text-sm font-medium">Regions</Label>
           <div className="space-y-2">
-            {[
-              { value: "alberta", label: "Alberta" },
-              { value: "british_columbia", label: "British Columbia" },
-              { value: "yukon", label: "Yukon" }
-            ].map(region => (
+            {availableRegions.map(region => (
               <div key={region.value} className="flex items-center gap-2">
                 <Checkbox
                   id={`region-${region.value}`}
@@ -204,7 +210,7 @@ export default function OpportunityFilters({ filters, onFiltersChange, onClose }
         <div className="space-y-3">
           <Label className="text-sm font-medium">Company Specialization</Label>
           <div className="space-y-2 max-h-64 overflow-y-auto">
-            {STANDARD_CATEGORIES.map(category => (
+            {availableCategories.map(category => (
               <div key={category.value} className="flex items-center gap-2">
                 <Checkbox
                   id={`category-${category.value}`}
